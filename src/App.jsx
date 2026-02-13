@@ -49,19 +49,18 @@ import {
   FileBadge,
   Pill,
   Wallet,
-  Check,
-  Info,
-  Download // Added Download icon
+  HeartPulse
 } from 'lucide-react';
 
 /**
- * Project 10 IVF Portal Prototype
- * Version 14.1 (Bug Fixes: Hoisted Initial Data)
+ * Project10 HMIS Portal Prototype
+ * Developed for Kods Technologies Pvt Ltd
+ * Version 13.1 (Functional NICU Module & Vitals Tracking)
  */
 
-// --- Initial Mock Data (Hoisted to Top) ---
+// --- Mock Data ---
 
-const INITIAL_PATIENTS = [
+const PATIENTS = [
   { id: 'P001', name: 'Sarah Jenkins', age: 32, status: 'Active IVF', bloodGroup: 'O+', contact: '555-0123', doctor: 'Dr. Anjali Kumar' },
   { id: 'P002', name: 'Priya Sharma', age: 29, status: 'IUI Consultation', bloodGroup: 'B+', contact: '555-0124', doctor: 'Dr. Rakesh Singh' },
   { id: 'P003', name: 'Emily Chen', age: 35, status: 'NICU Parent', bloodGroup: 'A-', contact: '555-0125', doctor: 'Dr. Susan George' },
@@ -69,21 +68,21 @@ const INITIAL_PATIENTS = [
   { id: 'P005', name: 'Monica Geller', age: 31, status: 'IUI Consultation', bloodGroup: 'AB+', contact: '555-0127', doctor: 'Dr. Rakesh Singh' },
 ];
 
-const INITIAL_PACKAGES = [
+const PACKAGES = [
   { id: 1, name: 'Basic IUI Package', price: '₹15,000', code: 'PKG-IUI-01', includes: ['Consultation', 'Semen Analysis', 'Single IUI Cycle', 'Follicular Monitoring'] },
   { id: 2, name: 'Standard IVF Package', price: '₹1,20,000', code: 'PKG-IVF-STD', includes: ['Consultation', 'Oocyte Retrieval', 'ICSI', 'Embryo Transfer', 'Vitrification (1yr)'] },
   { id: 3, name: 'Donor Egg IVF Program', price: '₹2,50,000', code: 'PKG-IVF-DNR', includes: ['Donor Screening', 'Donor Compensation', 'IVF Cycle', 'Legal Documentation'] },
 ];
 
-const INITIAL_INVENTORY = [
+const ART_INVENTORY = [
   { id: 'D-102', type: 'Sperm Vial', donorCode: 'DON-A44', count: 12, quality: 'High Motility', status: 'Available' },
   { id: 'D-105', type: 'Oocyte', donorCode: 'DON-B21', count: 6, quality: 'MII', status: 'Reserved' },
   { id: 'E-301', type: 'Embryo', donorCode: 'Couple-P001', count: 3, quality: 'Blastocyst 4AA', status: 'Frozen' },
 ];
 
 const INITIAL_NICU_BEDS = [
-  { id: 1, type: 'Occupied', name: 'Baby of Emily', age: '2 Days', weight: '2.1kg', gender: 'Male', vitals: { hr: 140, spo2: 98 } },
-  { id: 2, type: 'Occupied', name: 'Baby of Sarah', age: '5 Days', weight: '1.8kg', gender: 'Female', vitals: { hr: 145, spo2: 97 } },
+  { id: 1, type: 'Occupied', name: 'Baby of Emily', age: '2 Days', weight: '2.1', gender: 'Male', vitals: { hr: 140, spo2: 98, temp: 36.6 } },
+  { id: 2, type: 'Occupied', name: 'Baby of Sarah', age: '5 Days', weight: '1.8', gender: 'Female', vitals: { hr: 145, spo2: 97, temp: 36.8 } },
   { id: 3, type: 'Available' },
   { id: 4, type: 'Available' },
   { id: 5, type: 'Available' },
@@ -128,8 +127,8 @@ const Project10Logo = ({ collapsed, dark = false }) => (
     </g>
     {!collapsed && (
       <g transform="translate(50, 8)">
-        <text x="0" y="18" fill={dark ? "#ffffff" : "#581c87"} fontFamily="serif" fontSize="22" fontWeight="bold" letterSpacing="-0.5">Project 10</text>
-        <text x="0" y="30" fill={dark ? "#e9d5ff" : "#c026d3"} fontFamily="sans-serif" fontSize="9" fontWeight="bold" letterSpacing="2.5" style={{ textTransform: "uppercase" }}>IVF</text>
+        <text x="0" y="18" fill={dark ? "#ffffff" : "#581c87"} fontFamily="serif" fontSize="22" fontWeight="bold" letterSpacing="-0.5">Project10</text>
+        <text x="0" y="30" fill={dark ? "#e9d5ff" : "#c026d3"} fontFamily="sans-serif" fontSize="9" fontWeight="bold" letterSpacing="2.5" style={{ textTransform: "uppercase" }}>HMIS</text>
       </g>
     )}
   </svg>
@@ -171,18 +170,6 @@ const SectionHeader = ({ title, subtitle, action }) => (
   </div>
 );
 
-// Toast Component
-const Toast = ({ message, onClose }) => (
-  <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in z-[200]">
-    <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900">
-      <Check size={14} strokeWidth={3} />
-    </div>
-    <span className="font-bold text-sm">{message}</span>
-    <button onClick={onClose} className="ml-4 text-slate-400 hover:text-white"><X size={16} /></button>
-  </div>
-);
-
-// Generic Modal Component
 const Modal = ({ title, onClose, children }) => (
   <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -201,29 +188,18 @@ const Modal = ({ title, onClose, children }) => (
 
 // --- Modules ---
 
-const ConsultationModule = ({ showToast }) => {
+const ConsultationModule = () => {
   const [activeTab, setActiveTab] = useState('details');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
-  const [patients, setPatients] = useState(INITIAL_PATIENTS);
-  const [newPatient, setNewPatient] = useState({ firstName: '', lastName: '', phone: '' });
 
-  const filteredPatients = patients.filter(p => {
+  const filteredPatients = PATIENTS.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-    const id = `P00${patients.length + 1}`;
-    setPatients([{ id, name: `${newPatient.firstName} ${newPatient.lastName}`, age: 30, status: 'IUI Consultation', doctor: 'Dr. Anjali', contact: newPatient.phone, bloodGroup: 'O+' }, ...patients]);
-    setShowRegistration(false);
-    showToast(`Patient ${newPatient.firstName} registered successfully.`);
-    setNewPatient({ firstName: '', lastName: '', phone: '' });
-  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -280,7 +256,7 @@ const ConsultationModule = ({ showToast }) => {
           </div>
           <div className="overflow-y-auto flex-1 divide-y divide-slate-50 p-2">
             {filteredPatients.map((p, i) => (
-              <div key={p.id} className={`p-4 mb-2 rounded-xl cursor-pointer transition-all border border-transparent ${i === 0 ? 'bg-purple-50/50 border-purple-100 shadow-sm' : 'hover:bg-slate-50'}`}>
+              <div key={p.id} onClick={() => alert(`Opening details for ${p.name}`)} className={`p-4 mb-2 rounded-xl cursor-pointer transition-all border border-transparent ${i === 0 ? 'bg-purple-50/50 border-purple-100 shadow-sm' : 'hover:bg-slate-50'}`}>
                 <div className="flex justify-between items-start mb-2">
                   <p className={`font-bold text-base ${i === 0 ? 'text-purple-900' : 'text-slate-700'}`}>{p.name}</p>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${i === 0 ? 'bg-white text-purple-700 border-purple-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{p.id}</span>
@@ -347,14 +323,14 @@ const ConsultationModule = ({ showToast }) => {
                 <div className="pt-4 border-t border-slate-50">
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Prescription & Plan</label>
-                    <button onClick={() => showToast("Opening Prescription Template...")} className="text-purple-700 text-xs font-bold hover:underline flex items-center gap-1"><Plus size={12} /> ADD TEMPLATE</button>
+                    <button onClick={() => alert("Opening Prescription Template...")} className="text-purple-700 text-xs font-bold hover:underline flex items-center gap-1"><Plus size={12} /> ADD TEMPLATE</button>
                   </div>
                   <div className="bg-purple-50/50 p-6 rounded-xl border border-purple-100">
                     <div className="flex gap-3 mb-6">
                       <input type="text" placeholder="Drug Name" className="flex-1 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
                       <input type="text" placeholder="Dosage" className="w-32 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
                       <input type="text" placeholder="Freq" className="w-32 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
-                      <button onClick={() => showToast("Medicine added to list!")} className="bg-purple-900 text-white p-3 rounded-lg hover:bg-purple-800 shadow-md transition-transform hover:scale-105"><Plus size={18} /></button>
+                      <button onClick={() => alert("Medicine added!")} className="bg-purple-900 text-white p-3 rounded-lg hover:bg-purple-800 shadow-md transition-transform hover:scale-105"><Plus size={18} /></button>
                     </div>
                     <div className="bg-white rounded-lg p-10 text-center border border-dashed border-purple-200">
                       <p className="text-slate-500 text-sm font-medium">No medicines added to this prescription yet.</p>
@@ -368,8 +344,8 @@ const ConsultationModule = ({ showToast }) => {
           <div className="p-6 border-t border-purple-50 bg-white rounded-b-2xl flex justify-between items-center">
             <span className="text-xs font-medium text-slate-400 flex items-center gap-2"><Clock size={12} /> Last auto-saved: 2 mins ago</span>
             <div className="flex gap-4">
-              <button onClick={() => showToast("Changes discarded")} className="px-6 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg font-bold text-sm transition">Discard</button>
-              <button onClick={() => showToast("Consultation Saved Successfully!")} className="px-6 py-2.5 bg-purple-900 text-white rounded-lg flex items-center gap-2 hover:bg-purple-800 shadow-lg shadow-purple-900/20 font-bold text-sm transition transform hover:-translate-y-0.5">
+              <button onClick={() => alert("Changes discarded")} className="px-6 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg font-bold text-sm transition">Discard</button>
+              <button onClick={() => alert("Consultation Saved Successfully!")} className="px-6 py-2.5 bg-purple-900 text-white rounded-lg flex items-center gap-2 hover:bg-purple-800 shadow-lg shadow-purple-900/20 font-bold text-sm transition transform hover:-translate-y-0.5">
                 <Save size={18} /> Save Records
               </button>
             </div>
@@ -379,14 +355,14 @@ const ConsultationModule = ({ showToast }) => {
 
       {showRegistration && (
         <Modal title="Patient Registration" onClose={() => setShowRegistration(false)}>
-          <form className="space-y-4" onSubmit={handleRegister}>
+          <form className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">First Name</label><input required type="text" onChange={e => setNewPatient({ ...newPatient, firstName: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Last Name</label><input required type="text" onChange={e => setNewPatient({ ...newPatient, lastName: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">First Name</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Last Name</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
             </div>
             <div><label className="block text-xs font-bold text-slate-500 mb-1">Date of Birth</label><input type="date" className="w-full p-2 border rounded-lg" /></div>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Phone Number</label><input required type="tel" onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
-            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Register Patient</button>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Phone Number</label><input type="tel" className="w-full p-2 border rounded-lg" /></div>
+            <button onClick={(e) => { e.preventDefault(); setShowRegistration(false); alert("Patient Registered!") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Register Patient</button>
           </form>
         </Modal>
       )}
@@ -394,10 +370,8 @@ const ConsultationModule = ({ showToast }) => {
   );
 };
 
-const IUIProtocolModule = ({ showToast }) => {
+const IUIProtocolModule = () => {
   const [showAddScan, setShowAddScan] = useState(false);
-  const [showMeds, setShowMeds] = useState(false);
-  const [showSperm, setShowSperm] = useState(false);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -405,7 +379,7 @@ const IUIProtocolModule = ({ showToast }) => {
         title="IUI Protocol"
         subtitle="Intrauterine Insemination Cycle Management."
         action={
-          <button onClick={() => showToast("IUI Cycle Initiated for Patient")} className="bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg font-bold hover:bg-purple-800 transition"><Plus size={18} /> Start IUI Cycle</button>
+          <button className="bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg font-bold hover:bg-purple-800 transition"><Plus size={18} /> Start IUI Cycle</button>
         }
       />
 
@@ -444,7 +418,7 @@ const IUIProtocolModule = ({ showToast }) => {
               </div>
             </div>
           </div>
-          <button onClick={() => setShowMeds(true)} className="w-full mt-6 py-3 bg-purple-100 text-purple-700 font-bold rounded-xl hover:bg-purple-200 transition">Adjust Meds</button>
+          <button className="w-full mt-6 py-3 bg-purple-100 text-purple-700 font-bold rounded-xl hover:bg-purple-200 transition">Adjust Meds</button>
         </Card>
 
         <Card className="p-6 h-full flex flex-col">
@@ -454,7 +428,7 @@ const IUIProtocolModule = ({ showToast }) => {
             <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Post-Wash Motility</label><p className="font-bold text-emerald-600 text-xl">90%</p></div>
             <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Technique</label><p className="font-bold text-slate-800">Double Density Gradient</p></div>
           </div>
-          <button onClick={() => setShowSperm(true)} className="w-full mt-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Update Analysis</button>
+          <button className="w-full mt-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Update Analysis</button>
         </Card>
       </div>
 
@@ -466,29 +440,7 @@ const IUIProtocolModule = ({ showToast }) => {
               <div><label className="text-xs font-bold text-slate-500 uppercase">Left Ovary</label><input type="text" className="w-full p-2 border rounded-lg" placeholder="16mm" /></div>
             </div>
             <div><label className="text-xs font-bold text-slate-500 uppercase">Endometrium</label><input type="text" className="w-full p-2 border rounded-lg" placeholder="8mm" /></div>
-            <button onClick={(e) => { e.preventDefault(); setShowAddScan(false); showToast("IUI Scan Data Saved") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Scan</button>
-          </form>
-        </Modal>
-      )}
-
-      {showMeds && (
-        <Modal title="Adjust Medication" onClose={() => setShowMeds(false)}>
-          <form className="space-y-4">
-            <input type="text" className="w-full p-2 border rounded-lg" placeholder="Drug Name" />
-            <input type="text" className="w-full p-2 border rounded-lg" placeholder="Dosage" />
-            <button onClick={(e) => { e.preventDefault(); setShowMeds(false); showToast("Protocol Updated") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Update Protocol</button>
-          </form>
-        </Modal>
-      )}
-
-      {showSperm && (
-        <Modal title="Sperm Analysis" onClose={() => setShowSperm(false)}>
-          <form className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-xs font-bold text-slate-500 uppercase">Count (M/ml)</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
-              <div><label className="text-xs font-bold text-slate-500 uppercase">Motility (%)</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
-            </div>
-            <button onClick={(e) => { e.preventDefault(); setShowSperm(false); showToast("Andrology Data Saved") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Analysis</button>
+            <button onClick={(e) => { e.preventDefault(); setShowAddScan(false) }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Scan</button>
           </form>
         </Modal>
       )}
@@ -496,7 +448,7 @@ const IUIProtocolModule = ({ showToast }) => {
   )
 }
 
-const IVFProcessSuite = ({ showToast }) => {
+const IVFProcessSuite = () => {
   const [activeStage, setActiveStage] = useState('baseline');
 
   // State for functionality
@@ -517,7 +469,6 @@ const IVFProcessSuite = ({ showToast }) => {
     e.preventDefault();
     setBaselineData({ ...baselineData, ...modalInput });
     setActiveModal(null);
-    showToast("Hormone Profile Updated");
   };
 
   const handleInfToggle = (key) => {
@@ -531,7 +482,6 @@ const IVFProcessSuite = ({ showToast }) => {
     e.preventDefault();
     setMeds([...meds, modalInput]);
     setActiveModal(null);
-    showToast("Medication Added to Protocol");
   };
 
   const handleScanSave = (e) => {
@@ -539,21 +489,18 @@ const IVFProcessSuite = ({ showToast }) => {
     if (modalInput.rt) setScansRT([...scansRT, ...modalInput.rt.split(',').map(Number)]);
     if (modalInput.lt) setScansLT([...scansLT, ...modalInput.lt.split(',').map(Number)]);
     setActiveModal(null);
-    showToast("Follicular Scan Logged");
   };
 
   const handleOPUSave = (e) => {
     e.preventDefault();
     setOpuCounts({ ...opuCounts, ...modalInput });
     setActiveModal(null);
-    showToast("OPU Counts Updated");
   };
 
   const handleNoteSave = (e) => {
     e.preventDefault();
     setClinicalNotes([...clinicalNotes, { ...modalInput, date: new Date().toLocaleString() }]);
     setActiveModal(null);
-    showToast("Clinical Note Saved");
   }
 
   return (
@@ -563,8 +510,8 @@ const IVFProcessSuite = ({ showToast }) => {
         subtitle="Comprehensive 10-stage lifecycle management for IVF cycles."
         action={
           <div className="flex gap-3">
-            <button onClick={() => showToast("Consent forms loaded")} className="bg-white border border-purple-100 text-purple-700 px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm font-bold"><FileText size={18} /> Consent Vault</button>
-            <button onClick={() => showToast("New IVF Cycle Initialized")} className="bg-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg font-bold"><Plus size={18} /> New Cycle</button>
+            <button onClick={() => alert("Opening Consent Vault...")} className="bg-white border border-purple-100 text-purple-700 px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm font-bold"><FileText size={18} /> Consent Vault</button>
+            <button onClick={() => alert("Initializing New Cycle...")} className="bg-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg font-bold"><Plus size={18} /> New Cycle</button>
           </div>
         }
       />
@@ -813,7 +760,7 @@ const IVFProcessSuite = ({ showToast }) => {
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Clinician Verified</span>
                 </div>
               </div>
-              <button onClick={() => showToast("Stage Synced Successfully!")} className="bg-purple-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-purple-900/20 transition-all transform hover:-translate-y-1 flex items-center gap-2">
+              <button onClick={() => alert("Stage Synced Successfully!")} className="bg-purple-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-purple-900/20 transition-all transform hover:-translate-y-1 flex items-center gap-2">
                 <Save size={20} /> Save Progress & Sync
               </button>
             </div>
@@ -885,7 +832,7 @@ const IVFProcessSuite = ({ showToast }) => {
   );
 };
 
-const ScheduleModule = ({ showToast }) => {
+const ScheduleModule = () => {
   const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAppt, setNewAppt] = useState({ time: '', patient: '', type: '', room: '' });
@@ -907,7 +854,6 @@ const ScheduleModule = ({ showToast }) => {
       setSchedules([...schedules, { id: Date.now(), ...newAppt, color: 'purple' }].sort((a, b) => a.time.localeCompare(b.time)));
       setShowAddModal(false);
       setNewAppt({ time: '', patient: '', type: '', room: '' });
-      showToast("Appointment Added");
     }
   };
 
@@ -915,7 +861,6 @@ const ScheduleModule = ({ showToast }) => {
     e.preventDefault();
     setSchedules(schedules.map(s => s.id === rescheduleData.id ? rescheduleData : s).sort((a, b) => a.time.localeCompare(b.time)));
     setShowRescheduleModal(false);
-    showToast("Schedule Updated");
   };
 
   return (
@@ -995,17 +940,8 @@ const ScheduleModule = ({ showToast }) => {
   );
 };
 
-const PackageModule = ({ showToast }) => {
+const PackageModule = () => {
   const [showCreate, setShowCreate] = useState(false);
-  const [packages, setPackages] = useState(INITIAL_PACKAGES);
-  const [newPackage, setNewPackage] = useState({ name: '', price: '', code: '' });
-
-  const handleCreate = (e) => {
-    e.preventDefault();
-    setPackages([...packages, { id: Date.now(), ...newPackage, code: 'PKG-NEW', includes: ['Consultation'] }]);
-    setShowCreate(false);
-    showToast("Package Created Successfully");
-  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -1019,7 +955,7 @@ const PackageModule = ({ showToast }) => {
         }
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {packages.map((pkg) => (
+        {PACKAGES.map((pkg) => (
           <Card key={pkg.id} className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-purple-100">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-fuchsia-500"></div>
             <div className="flex justify-between items-start mb-6">
@@ -1040,7 +976,7 @@ const PackageModule = ({ showToast }) => {
             </div>
             <div className="flex gap-4 pt-6 border-t border-slate-50">
               <button onClick={() => alert("Editing Package Details...")} className="flex-1 py-2.5 text-slate-600 hover:text-slate-900 text-sm font-bold transition">Edit Details</button>
-              <button onClick={() => showToast("Package Selected for Patient")} className="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Select Package</button>
+              <button onClick={() => alert("Package Selected")} className="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Select Package</button>
             </div>
           </Card>
         ))}
@@ -1048,10 +984,10 @@ const PackageModule = ({ showToast }) => {
 
       {showCreate && (
         <Modal title="Create New Package" onClose={() => setShowCreate(false)}>
-          <form className="space-y-4" onSubmit={handleCreate}>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Package Name</label><input onChange={e => setNewPackage({ ...newPackage, name: e.target.value })} type="text" className="w-full p-2 border rounded-lg" required /></div>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Price</label><input onChange={e => setNewPackage({ ...newPackage, price: e.target.value })} type="text" className="w-full p-2 border rounded-lg" required /></div>
-            <button type="submit" className="w-full bg-slate-900 text-white p-3 rounded-xl font-bold mt-2">Save Package</button>
+          <form className="space-y-4">
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Package Name</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Price</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            <button onClick={(e) => { e.preventDefault(); setShowCreate(false); alert("Package Created!") }} className="w-full bg-slate-900 text-white p-3 rounded-xl font-bold mt-2">Create Package</button>
           </form>
         </Modal>
       )}
@@ -1059,9 +995,81 @@ const PackageModule = ({ showToast }) => {
   )
 };
 
-const NICUModule = ({ showToast }) => {
+const NICUModule = () => {
+  const [beds, setBeds] = useState(INITIAL_NICU_BEDS);
   const [showAdmit, setShowAdmit] = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const [selectedBed, setSelectedBed] = useState(null);
+  const [admitData, setAdmitData] = useState({ motherName: '', gender: 'Male', weight: '', notes: '' });
+  const [vitalsUpdate, setVitalsUpdate] = useState({ hr: '', spo2: '', temp: '' });
+  const [balance, setBalance] = useState(25200);
+
+  // Stats for the "Unit Status" card
+  const occupiedCount = beds.filter(b => b.type === 'Occupied').length;
+  const occupancyRate = Math.round((occupiedCount / beds.length) * 100);
+
+  const handleAdmit = (e) => {
+    e.preventDefault();
+    const freeBedIndex = beds.findIndex(b => b.type === 'Available');
+
+    if (freeBedIndex === -1) {
+      alert("NICU is full! Cannot admit new patient.");
+      setShowAdmit(false);
+      return;
+    }
+
+    const newBeds = [...beds];
+    newBeds[freeBedIndex] = {
+      ...newBeds[freeBedIndex],
+      type: 'Occupied',
+      name: `Baby of ${admitData.motherName}`,
+      gender: admitData.gender,
+      weight: admitData.weight,
+      age: '0 Days',
+      vitals: { hr: 140, spo2: 98, temp: 36.5 },
+      notes: admitData.notes
+    };
+
+    setBeds(newBeds);
+    setShowAdmit(false);
+    setAdmitData({ motherName: '', gender: 'Male', weight: '', notes: '' });
+  };
+
+  const handleDischarge = () => {
+    if (!selectedBed) return;
+    const newBeds = beds.map(b => b.id === selectedBed.id ? { id: b.id, type: 'Available' } : b);
+    setBeds(newBeds);
+    setSelectedBed(null);
+  };
+
+  const handleUpdateVitals = (e) => {
+    e.preventDefault();
+    if (!selectedBed) return;
+
+    const newBeds = beds.map(b => {
+      if (b.id === selectedBed.id) {
+        return {
+          ...b,
+          vitals: {
+            hr: vitalsUpdate.hr || b.vitals.hr,
+            spo2: vitalsUpdate.spo2 || b.vitals.spo2,
+            temp: vitalsUpdate.temp || b.vitals.temp
+          }
+        };
+      }
+      return b;
+    });
+
+    setBeds(newBeds);
+    setSelectedBed(null);
+    setVitalsUpdate({ hr: '', spo2: '', temp: '' });
+  };
+
+  const handlePayment = () => {
+    const payment = 5000;
+    if (balance <= 0) return alert("Balance is already cleared.");
+    setBalance(Math.max(0, balance - payment));
+    alert(`Payment of ₹${payment} recorded successfully.`);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -1070,7 +1078,7 @@ const NICUModule = ({ showToast }) => {
         subtitle="Neonatal Intensive Care Unit Monitoring System"
         action={
           <div className="flex gap-4">
-            <button onClick={() => setShowReport(true)} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
+            <button onClick={() => alert("Generating Shift Report PDF...")} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
               <FileText size={18} /> Shift Report
             </button>
             <button onClick={() => setShowAdmit(true)} className="bg-purple-800 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-purple-900 shadow-lg font-bold transition">
@@ -1081,8 +1089,13 @@ const NICUModule = ({ showToast }) => {
       />
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {NICU_BEDS.map((bed) => (
-            <Card key={bed.id} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 border-none ring-1 ring-slate-100" noPadding>
+          {beds.map((bed) => (
+            <Card
+              key={bed.id}
+              className={`relative overflow-hidden group hover:shadow-2xl transition-all duration-300 border-none ring-1 ${bed.type === 'Occupied' ? 'cursor-pointer hover:ring-purple-200 ring-slate-100' : 'ring-slate-100'}`}
+              noPadding
+              onClick={() => bed.type === 'Occupied' && setSelectedBed(bed)}
+            >
               <div className={`h-1.5 w-full ${bed.type === 'Occupied' ? 'bg-pink-500' : 'bg-emerald-500'}`}></div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-5">
@@ -1111,7 +1124,7 @@ const NICUModule = ({ showToast }) => {
                     <div className="grid grid-cols-3 gap-2 text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
                       <div className="p-1">
                         <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">Wt</span>
-                        <span className="font-bold text-slate-700 text-sm">{bed.weight}</span>
+                        <span className="font-bold text-slate-700 text-sm">{bed.weight}kg</span>
                       </div>
                       <div className="p-1 border-l border-slate-200">
                         <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">HR</span>
@@ -1122,8 +1135,8 @@ const NICUModule = ({ showToast }) => {
                         <span className="font-bold text-emerald-600 text-sm">{bed.vitals.spo2}%</span>
                       </div>
                     </div>
-                    <button onClick={() => showToast("Opening Digital Chart...")} className="w-full mt-5 py-2.5 text-xs font-bold text-slate-500 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition uppercase tracking-widest border border-transparent hover:border-purple-100">
-                      View Chart
+                    <button className="w-full mt-5 py-2.5 text-xs font-bold text-slate-500 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition uppercase tracking-widest border border-transparent hover:border-purple-100">
+                      Update Vitals / Details
                     </button>
                   </>
                 ) : (
@@ -1149,10 +1162,14 @@ const NICUModule = ({ showToast }) => {
                 <span className="text-slate-400 text-sm font-medium">Occupancy</span>
                 <div className="flex items-center gap-3">
                   <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div className="w-1/3 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                    <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-500" style={{ width: `${occupancyRate}%` }}></div>
                   </div>
-                  <span className="font-bold text-sm">33%</span>
+                  <span className="font-bold text-sm">{occupancyRate}%</span>
                 </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm font-medium">Ventilators</span>
+                <span className="font-bold text-sm text-purple-200">2 In Use</span>
               </div>
             </div>
           </Card>
@@ -1170,6 +1187,7 @@ const NICUModule = ({ showToast }) => {
                 <span>₹ 9,700</span>
               </div>
             </div>
+            {/* Advance & Settlements */}
             <div className="mt-6 pt-4 border-t border-slate-100">
               <div className="flex justify-between items-center mb-2">
                 <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1"><Wallet size={12} /> Advance & Settlements</h5>
@@ -1177,31 +1195,60 @@ const NICUModule = ({ showToast }) => {
               <div className="bg-slate-50 p-3 rounded-lg text-sm space-y-2">
                 <div className="flex justify-between"><span className="text-slate-500">Total Billed</span><span className="font-bold">₹ 45,200</span></div>
                 <div className="flex justify-between"><span className="text-slate-500">Advance Paid</span><span className="font-bold text-emerald-600">₹ 20,000</span></div>
-                <div className="border-t border-slate-200 pt-1 flex justify-between"><span className="font-bold text-rose-500">Balance Due</span><span className="font-bold text-rose-500">₹ 25,200</span></div>
+                <div className="border-t border-slate-200 pt-1 flex justify-between"><span className="font-bold text-rose-500">Balance Due</span><span className="font-bold text-rose-500">₹ {balance.toLocaleString()}</span></div>
               </div>
-              <button onClick={() => showToast("Payment Recorded Successfully")} className="w-full mt-3 py-2 text-xs bg-purple-700 text-white rounded-lg font-bold hover:bg-purple-800">Record Payment</button>
+              <button onClick={handlePayment} className="w-full mt-3 py-2 text-xs bg-purple-700 text-white rounded-lg font-bold hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed" disabled={balance <= 0}>
+                {balance > 0 ? 'Record Payment (₹5,000)' : 'Fully Paid'}
+              </button>
             </div>
           </Card>
         </div>
       </div>
 
+      {/* Admission Modal */}
       {showAdmit && (
         <Modal title="NICU Admission" onClose={() => setShowAdmit(false)}>
-          <form className="space-y-4">
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Mother's Name</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+          <form onSubmit={handleAdmit} className="space-y-4">
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Mother's Name</label><input type="text" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" value={admitData.motherName} onChange={e => setAdmitData({ ...admitData, motherName: e.target.value })} required /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Gender</label><select className="w-full p-2 border rounded-lg"><option>Male</option><option>Female</option></select></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Birth Weight</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Gender</label><select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" value={admitData.gender} onChange={e => setAdmitData({ ...admitData, gender: e.target.value })}><option>Male</option><option>Female</option></select></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Birth Weight (kg)</label><input type="number" step="0.01" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" value={admitData.weight} onChange={e => setAdmitData({ ...admitData, weight: e.target.value })} required /></div>
             </div>
-            <button onClick={(e) => { e.preventDefault(); setShowAdmit(false); showToast("Infant Admitted!") }} className="w-full bg-pink-600 text-white p-3 rounded-xl font-bold mt-2">Admit Patient</button>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Clinical Notes</label><textarea className="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Reason for admission..." value={admitData.notes} onChange={e => setAdmitData({ ...admitData, notes: e.target.value })}></textarea></div>
+            <button type="submit" className="w-full bg-pink-600 text-white p-3 rounded-xl font-bold mt-2 hover:bg-pink-700 shadow-lg">Admit Patient</button>
           </form>
         </Modal>
       )}
-      {showReport && (
-        <Modal title="Shift Report" onClose={() => setShowReport(false)}>
-          <div className="space-y-4">
-            <p className="text-sm text-slate-600">Generating report for current shift...</p>
-            <button onClick={(e) => { e.preventDefault(); setShowReport(false); showToast("Report Downloaded") }} className="w-full bg-slate-900 text-white p-3 rounded-xl font-bold">Download PDF</button>
+
+      {/* Patient Details & Vitals Modal */}
+      {selectedBed && (
+        <Modal title={`Patient: ${selectedBed.name}`} onClose={() => setSelectedBed(null)}>
+          <div className="space-y-6">
+            <div className="bg-pink-50 p-4 rounded-xl border border-pink-100 flex gap-4 items-center">
+              <div className="bg-white p-2 rounded-full shadow-sm"><Baby size={24} className="text-pink-500" /></div>
+              <div>
+                <p className="font-bold text-slate-800">Current Vitals</p>
+                <div className="flex gap-4 text-xs font-medium text-slate-600 mt-1">
+                  <span>HR: {selectedBed.vitals.hr} bpm</span>
+                  <span>SpO2: {selectedBed.vitals.spo2}%</span>
+                  <span>Temp: {selectedBed.vitals.temp}°C</span>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateVitals}>
+              <h4 className="font-bold text-slate-800 text-sm mb-3 border-b border-slate-100 pb-2">Update Vitals</h4>
+              <div className="grid grid-cols-3 gap-3">
+                <div><label className="text-[10px] font-bold text-slate-400 uppercase">HR (bpm)</label><input type="number" className="w-full p-2 border rounded-lg text-sm" placeholder={selectedBed.vitals.hr} onChange={e => setVitalsUpdate({ ...vitalsUpdate, hr: e.target.value })} /></div>
+                <div><label className="text-[10px] font-bold text-slate-400 uppercase">SpO2 (%)</label><input type="number" className="w-full p-2 border rounded-lg text-sm" placeholder={selectedBed.vitals.spo2} onChange={e => setVitalsUpdate({ ...vitalsUpdate, spo2: e.target.value })} /></div>
+                <div><label className="text-[10px] font-bold text-slate-400 uppercase">Temp (°C)</label><input type="number" step="0.1" className="w-full p-2 border rounded-lg text-sm" placeholder={selectedBed.vitals.temp} onChange={e => setVitalsUpdate({ ...vitalsUpdate, temp: e.target.value })} /></div>
+              </div>
+              <button type="submit" className="w-full mt-4 bg-purple-700 text-white p-3 rounded-xl font-bold text-sm">Save Vitals</button>
+            </form>
+
+            <div className="pt-4 border-t border-slate-100">
+              <button onClick={handleDischarge} className="w-full border border-rose-200 text-rose-600 p-3 rounded-xl font-bold text-sm hover:bg-rose-50 transition">Discharge Patient & Free Bed</button>
+            </div>
           </div>
         </Modal>
       )}
@@ -1209,25 +1256,9 @@ const NICUModule = ({ showToast }) => {
   )
 };
 
-const ARTBankModule = ({ showToast }) => {
+const ARTBankModule = () => {
   const [showStock, setShowStock] = useState(false);
   const [activeTab, setActiveTab] = useState('inventory');
-  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
-  const [newStock, setNewStock] = useState({ type: 'Sperm Vial', donor: '', grade: '' });
-
-  const handleAddStock = (e) => {
-    e.preventDefault();
-    setInventory([...inventory, {
-      id: `S-${Date.now().toString().slice(-4)}`,
-      type: newStock.type,
-      donorCode: newStock.donor,
-      count: 10,
-      quality: newStock.grade,
-      status: 'Available'
-    }]);
-    setShowStock(false);
-    showToast("Inventory Updated");
-  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -1236,7 +1267,7 @@ const ARTBankModule = ({ showToast }) => {
         subtitle="Gamete Inventory and Legal Compliance Log"
         action={
           <div className="flex gap-4">
-            <button onClick={() => showToast("Exporting Compliance Data...")} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
+            <button onClick={() => alert("Exporting Compliance Data...")} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
               <FileText size={18} /> Compliance Export
             </button>
             <button onClick={() => setShowStock(true)} className="bg-purple-800 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-purple-900 shadow-lg font-bold transition">
@@ -1265,8 +1296,8 @@ const ARTBankModule = ({ showToast }) => {
               <tr><th className="p-6">Sample ID</th><th className="p-6">Type</th><th className="p-6">Donor Code</th><th className="p-6">Count</th><th className="p-6">Grade</th><th className="p-6">Status</th></tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {inventory.map((item) => (
-                <tr key={item.id} onClick={() => showToast(`Viewing details for ${item.id}`)} className="hover:bg-slate-50 transition-colors group cursor-pointer">
+              {ART_INVENTORY.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="p-6 font-mono font-bold text-purple-900">{item.id}</td>
                   <td className="p-6 flex items-center gap-2">{item.type}</td>
                   <td className="p-6 font-medium">{item.donorCode}</td>
@@ -1284,14 +1315,14 @@ const ARTBankModule = ({ showToast }) => {
             <Trash2 size={48} className="mx-auto mb-4 opacity-50" />
             <h4 className="text-xl font-bold text-slate-700 mb-2">Disposal Log Empty</h4>
             <p className="max-w-md mx-auto">No bio-waste disposal records found for the current cycle. All expired samples are currently flagged for review.</p>
-            <button onClick={() => showToast("Disposal Log Entry Created")} className="mt-6 px-6 py-3 border border-slate-300 rounded-xl text-slate-600 font-bold hover:bg-slate-50">Log New Disposal</button>
+            <button className="mt-6 px-6 py-3 border border-slate-300 rounded-xl text-slate-600 font-bold hover:bg-slate-50">Log New Disposal</button>
           </div>
         )}
 
         {activeTab === 'registers' && (
           <div className="p-8 grid grid-cols-3 gap-6">
             {['Form 1: Enrollment', 'Form 2: Oocyte Retrieval', 'Form 3: Embryo Transfer', 'Form 4: Pregnancy Outcome'].map(reg => (
-              <div key={reg} onClick={() => showToast(`Opening ${reg}`)} className="p-6 border border-slate-200 rounded-xl hover:border-purple-300 hover:shadow-md cursor-pointer transition">
+              <div key={reg} className="p-6 border border-slate-200 rounded-xl hover:border-purple-300 hover:shadow-md cursor-pointer transition">
                 <FileBadge size={32} className="text-purple-600 mb-4" />
                 <h4 className="font-bold text-slate-800">{reg}</h4>
                 <p className="text-xs text-slate-500 mt-2">Last Updated: Today</p>
@@ -1299,19 +1330,17 @@ const ARTBankModule = ({ showToast }) => {
             ))}
           </div>
         )}
-
-        {activeTab === 'donor' && <div className="p-12 text-center text-slate-400">Donor Registry Placeholder</div>}
       </Card>
 
       {showStock && (
         <Modal title="Add Inventory" onClose={() => setShowStock(false)}>
-          <form className="space-y-4" onSubmit={handleAddStock}>
+          <form className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Type</label><select onChange={e => setNewStock({ ...newStock, type: e.target.value })} className="w-full p-2 border rounded-lg"><option>Sperm Vial</option><option>Oocyte</option></select></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Donor Code</label><input required onChange={e => setNewStock({ ...newStock, donor: e.target.value })} type="text" className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Type</label><select className="w-full p-2 border rounded-lg"><option>Sperm Vial</option><option>Oocyte</option></select></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Donor Code</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
             </div>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Quality Grade</label><input required onChange={e => setNewStock({ ...newStock, grade: e.target.value })} type="text" className="w-full p-2 border rounded-lg" /></div>
-            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save to Registry</button>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Quality Grade</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            <button onClick={(e) => { e.preventDefault(); setShowStock(false); alert("Inventory Updated!") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save to Registry</button>
           </form>
         </Modal>
       )}
@@ -1319,7 +1348,7 @@ const ARTBankModule = ({ showToast }) => {
   )
 };
 
-const LifeCycleModule = ({ showToast }) => (
+const LifeCycleModule = () => (
   <div className="space-y-8 animate-fade-in">
     <SectionHeader
       title="Patient Life Cycle Tracking"
@@ -1339,8 +1368,8 @@ const LifeCycleModule = ({ showToast }) => (
           </div>
         </div>
         <div className="flex gap-4">
-          <button onClick={() => showToast("Viewing Full Profile...")} className="px-6 py-2.5 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition text-slate-600">Patient Profile</button>
-          <button onClick={() => showToast("Adding New Event...")} className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Add Event</button>
+          <button onClick={() => alert("Viewing Full Profile...")} className="px-6 py-2.5 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition text-slate-600">Patient Profile</button>
+          <button onClick={() => alert("Adding New Event...")} className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Add Event</button>
         </div>
       </div>
       <div className="relative border-l-2 border-slate-200 ml-10 space-y-12 pb-6">
@@ -1366,40 +1395,7 @@ const LifeCycleModule = ({ showToast }) => (
   </div>
 );
 
-const DashboardModule = ({ onNavigate, showToast }) => {
-  const [activeModal, setActiveModal] = useState(null); // 'donor', 'pharmacy', 'details'
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-
-  // Function to simulate CSV download
-  const handleGenerateCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8,ID,Patient Name,Cycle Type,Status,Date\nP001,Sarah Jenkins,IVF,Stimulation,2023-10-26\nP002,Priya Sharma,IUI,Follicular Study,2023-10-26\n";
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "daily_art_registry.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast("CSV Report Downloaded");
-  };
-
-  const handleOpenDetails = (app) => {
-    setSelectedAppointment(app);
-    setActiveModal('details');
-  };
-
-  const handleSaveDonor = (e) => {
-    e.preventDefault();
-    setActiveModal(null);
-    showToast("New Donor Registered Successfully");
-  };
-
-  const handleSavePharmacy = (e) => {
-    e.preventDefault();
-    setActiveModal(null);
-    showToast("Pharmacy Request Sent");
-  };
-
+const DashboardModule = ({ onNavigate }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       <SectionHeader title="Dashboard Overview" subtitle="Welcome back, Dr. Anjali." />
@@ -1453,17 +1449,11 @@ const DashboardModule = ({ onNavigate, showToast }) => {
                   <p className="font-bold text-slate-800 text-lg group-hover:text-purple-900 transition-colors">{app.type}</p>
                   <p className="text-sm text-slate-500 font-medium">{app.patient} • <span className="text-slate-400">{app.room}</span></p>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleOpenDetails(app); }}
-                  className="ml-auto px-5 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-500 hover:text-purple-700 hover:border-purple-200 hover:bg-purple-50 transition-all"
-                >
-                  Details
-                </button>
+                <button className="ml-auto px-5 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-500 transition-all">Details</button>
               </div>
             ))}
           </div>
         </Card>
-
         <div className="space-y-6">
           <div className="bg-slate-900 rounded-2xl p-8 text-white text-center shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/20 to-transparent pointer-events-none"></div>
@@ -1472,28 +1462,18 @@ const DashboardModule = ({ onNavigate, showToast }) => {
             </div>
             <h3 className="font-bold text-xl mb-3 font-serif">Daily ART Registry</h3>
             <p className="text-slate-400 text-sm mb-8 leading-relaxed">Submit the daily registry data for legal state compliance.</p>
-            <button
-              onClick={handleGenerateCSV}
-              className="w-full bg-white text-slate-900 py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-2"
-            >
-              <Download size={16} /> Generate CSV Report
+            <button onClick={() => alert("CSV Report Generated and Downloaded.")} className="w-full bg-white text-slate-900 py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-colors uppercase tracking-wide text-xs">
+              Generate CSV Report
             </button>
           </div>
-
           <Card className="p-6">
             <h4 className="font-bold text-slate-800 mb-5 text-sm font-serif border-b border-slate-100 pb-2 text-left uppercase tracking-widest">Quick Actions</h4>
             <div className="space-y-3">
-              <button
-                onClick={() => setActiveModal('donor')}
-                className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all"
-              >
+              <button onClick={() => alert("Navigating to Donor Registration...")} className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all">
                 <span className="group-hover:text-purple-800 transition-colors">Add New Donor</span>
                 <div className="bg-white p-1 rounded-md shadow-sm group-hover:bg-purple-100 transition-colors"><ChevronRight size={16} /></div>
               </button>
-              <button
-                onClick={() => setActiveModal('pharmacy')}
-                className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all"
-              >
+              <button onClick={() => alert("Opening Pharmacy Request Portal...")} className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all">
                 <span className="group-hover:text-purple-800 transition-colors">Pharmacy Requests</span>
                 <div className="bg-white p-1 rounded-md shadow-sm group-hover:bg-purple-100 transition-colors"><ChevronRight size={16} /></div>
               </button>
@@ -1501,78 +1481,6 @@ const DashboardModule = ({ onNavigate, showToast }) => {
           </Card>
         </div>
       </div>
-
-      {/* --- Modals --- */}
-
-      {activeModal === 'details' && selectedAppointment && (
-        <Modal title="Appointment Details" onClose={() => setActiveModal(null)}>
-          <div className="space-y-6">
-            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Patient</p>
-                <h4 className="text-xl font-bold text-slate-800">{selectedAppointment.patient}</h4>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Time</p>
-                <p className="text-xl font-bold text-purple-700">{selectedAppointment.time}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-3 rounded-lg">
-                <p className="text-xs text-slate-500 font-bold mb-1">Procedure</p>
-                <p className="font-bold text-slate-800">{selectedAppointment.type}</p>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-lg">
-                <p className="text-xs text-slate-500 font-bold mb-1">Location</p>
-                <p className="font-bold text-slate-800">{selectedAppointment.room}</p>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p>
-              <textarea className="w-full p-3 border border-slate-200 rounded-xl text-sm" rows="3" placeholder="Add clinical notes here..."></textarea>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setActiveModal(null)} className="flex-1 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50">Close</button>
-              <button onClick={() => { setActiveModal(null); showToast("Appointment Updated"); }} className="flex-1 py-3 bg-purple-700 text-white font-bold rounded-xl hover:bg-purple-800">Save Changes</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {activeModal === 'donor' && (
-        <Modal title="Donor Registration" onClose={() => setActiveModal(null)}>
-          <form onSubmit={handleSaveDonor} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">First Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Last Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
-            </div>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Date of Birth</label><input type="date" className="w-full p-2 border rounded-lg" required /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Blood Group</label><select className="w-full p-2 border rounded-lg"><option>O+</option><option>A+</option><option>B+</option></select></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Donor Type</label><select className="w-full p-2 border rounded-lg"><option>Sperm</option><option>Egg</option></select></div>
-            </div>
-            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Register Donor</button>
-          </form>
-        </Modal>
-      )}
-
-      {activeModal === 'pharmacy' && (
-        <Modal title="Pharmacy Request" onClose={() => setActiveModal(null)}>
-          <form onSubmit={handleSavePharmacy} className="space-y-4">
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Patient ID</label><input type="text" placeholder="e.g. P001" className="w-full p-2 border rounded-lg" required /></div>
-            <div><label className="block text-xs font-bold text-slate-500 mb-1">Medication Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Quantity</label><input type="number" className="w-full p-2 border rounded-lg" required /></div>
-              <div><label className="block text-xs font-bold text-slate-500 mb-1">Priority</label><select className="w-full p-2 border rounded-lg"><option>Normal</option><option>Urgent</option></select></div>
-            </div>
-            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Send Request</button>
-          </form>
-        </Modal>
-      )}
-
     </div>
   );
 };
@@ -1619,34 +1527,30 @@ const ProfilePage = () => (
 
 // --- Main App Component ---
 export default function Project10HMIS() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentModule, setCurrentModule] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [toastMessage, setToastMessage] = useState(null);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   const handleLogout = () => {
-    // Since login is removed, this could redirect to a landing page or just reload
-    window.location.reload();
+    setIsLoggedIn(false);
+    setCurrentModule('dashboard');
+    setShowProfileMenu(false);
   };
 
   const renderContent = () => {
     switch (currentModule) {
-      case 'consultation': return <ConsultationModule showToast={showToast} />;
-      case 'package': return <PackageModule showToast={showToast} />;
-      case 'iui': return <IUIProtocolModule showToast={showToast} />;
-      case 'ivf': return <IVFProcessSuite showToast={showToast} />;
-      case 'nicu': return <NICUModule showToast={showToast} />;
-      case 'art': return <ARTBankModule showToast={showToast} />;
-      case 'lifecycle': return <LifeCycleModule showToast={showToast} />;
+      case 'consultation': return <ConsultationModule />;
+      case 'package': return <PackageModule />;
+      case 'iui': return <IUIProtocolModule />;
+      case 'ivf': return <IVFProcessSuite />;
+      case 'nicu': return <NICUModule />;
+      case 'art': return <ARTBankModule />;
+      case 'lifecycle': return <LifeCycleModule />;
       case 'profile': return <ProfilePage />;
-      case 'schedule': return <ScheduleModule showToast={showToast} />;
-      default: return <DashboardModule onNavigate={setCurrentModule} showToast={showToast} />;
+      case 'schedule': return <ScheduleModule />;
+      default: return <DashboardModule onNavigate={setCurrentModule} />;
     }
   };
 
@@ -1665,10 +1569,7 @@ export default function Project10HMIS() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] flex font-sans text-slate-900 selection:bg-purple-100 selection:text-purple-900 overflow-hidden relative">
-
-      {/* Toast Notification */}
-      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+    <div className="min-h-screen bg-[#FDFCFB] flex font-sans text-slate-900 selection:bg-purple-100 selection:text-purple-900 overflow-hidden">
 
       {/* Light Premium Sidebar */}
       <aside className={`bg-white text-slate-900 transition-all duration-300 flex flex-col shadow-xl z-20 border-r border-slate-100 h-screen ${sidebarOpen ? 'w-80' : 'w-24'}`}>
@@ -1688,8 +1589,8 @@ export default function Project10HMIS() {
             Clinical Suite
           </div>
           <NavItem id="consultation" label="Consultation" icon={Users} />
-          <NavItem id="ivf" label="IVF Suite (10 Stages)" icon={FlaskConical} />
           <NavItem id="iui" label="IUI Protocol" icon={TestTube} />
+          <NavItem id="ivf" label="IVF Suite (10 Stages)" icon={FlaskConical} />
           <NavItem id="nicu" label="NICU & Vitals" icon={Baby} />
 
           <div className={`mt-10 mb-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ${!sidebarOpen && 'hidden'}`}>
