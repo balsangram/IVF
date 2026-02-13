@@ -1,1690 +1,1789 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  BarChart3,
-  Activity,
-  Pill,
-  Stethoscope,
-  FileText,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2,
-  Building2,
-  TrendingUp,
-  Download,
-  ShieldCheck,
-  HeartPulse,
-  AlertTriangle,
-  ArrowUpRight,
-  X,
-  Printer,
-  Share2,
-  Info,
-  ChevronRight,
-  ArrowLeft,
-  PieChart,
   Users,
-  BedDouble,
-  IndianRupee,
-  Briefcase,
-  ClipboardList,
-  Truck,
-  Landmark,
-  Target,
-  FileBarChart,
-  LayoutGrid,
-  Server,
-  Smile,
+  Activity,
+  TestTube,
   Baby,
-  Eye,
-  FileDown,
-  Filter,
-  Search,
-  Clock,
-  ThumbsUp,
   Database,
-  Lock,
-  FileCheck,
-  ChevronDown,
+  FileText,
+  CreditCard,
+  Calendar,
+  ChevronRight,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Search,
+  Plus,
+  Save,
+  Thermometer,
+  Microscope,
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
   Bell,
-  Menu
+  Stethoscope,
+  Star,
+  Award,
+  ArrowRight,
+  TrendingUp,
+  Filter,
+  ChevronLeft,
+  LayoutDashboard,
+  Lock,
+  Mail,
+  ShieldCheck,
+  Phone,
+  Layers,
+  ClipboardList,
+  GitMerge,
+  FlaskConical,
+  Dna,
+  History,
+  Archive,
+  ThermometerSnowflake,
+  ActivitySquare,
+  Edit3,
+  Trash2,
+  FileBadge,
+  Pill,
+  Wallet,
+  Check,
+  Info,
+  Download // Added Download icon
 } from 'lucide-react';
 
-// --- Sub-components ---
+/**
+ * Project 10 IVF Portal Prototype
+ * Version 14.1 (Bug Fixes: Hoisted Initial Data)
+ */
 
-const Notification = ({ message, type, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
+// --- Initial Mock Data (Hoisted to Top) ---
 
+const INITIAL_PATIENTS = [
+  { id: 'P001', name: 'Sarah Jenkins', age: 32, status: 'Active IVF', bloodGroup: 'O+', contact: '555-0123', doctor: 'Dr. Anjali Kumar' },
+  { id: 'P002', name: 'Priya Sharma', age: 29, status: 'IUI Consultation', bloodGroup: 'B+', contact: '555-0124', doctor: 'Dr. Rakesh Singh' },
+  { id: 'P003', name: 'Emily Chen', age: 35, status: 'NICU Parent', bloodGroup: 'A-', contact: '555-0125', doctor: 'Dr. Susan George' },
+  { id: 'P004', name: 'Ananya Iyer', age: 28, status: 'Active IVF', bloodGroup: 'O+', contact: '555-0126', doctor: 'Dr. Anjali Kumar' },
+  { id: 'P005', name: 'Monica Geller', age: 31, status: 'IUI Consultation', bloodGroup: 'AB+', contact: '555-0127', doctor: 'Dr. Rakesh Singh' },
+];
+
+const INITIAL_PACKAGES = [
+  { id: 1, name: 'Basic IUI Package', price: '₹15,000', code: 'PKG-IUI-01', includes: ['Consultation', 'Semen Analysis', 'Single IUI Cycle', 'Follicular Monitoring'] },
+  { id: 2, name: 'Standard IVF Package', price: '₹1,20,000', code: 'PKG-IVF-STD', includes: ['Consultation', 'Oocyte Retrieval', 'ICSI', 'Embryo Transfer', 'Vitrification (1yr)'] },
+  { id: 3, name: 'Donor Egg IVF Program', price: '₹2,50,000', code: 'PKG-IVF-DNR', includes: ['Donor Screening', 'Donor Compensation', 'IVF Cycle', 'Legal Documentation'] },
+];
+
+const INITIAL_INVENTORY = [
+  { id: 'D-102', type: 'Sperm Vial', donorCode: 'DON-A44', count: 12, quality: 'High Motility', status: 'Available' },
+  { id: 'D-105', type: 'Oocyte', donorCode: 'DON-B21', count: 6, quality: 'MII', status: 'Reserved' },
+  { id: 'E-301', type: 'Embryo', donorCode: 'Couple-P001', count: 3, quality: 'Blastocyst 4AA', status: 'Frozen' },
+];
+
+const INITIAL_NICU_BEDS = [
+  { id: 1, type: 'Occupied', name: 'Baby of Emily', age: '2 Days', weight: '2.1kg', gender: 'Male', vitals: { hr: 140, spo2: 98 } },
+  { id: 2, type: 'Occupied', name: 'Baby of Sarah', age: '5 Days', weight: '1.8kg', gender: 'Female', vitals: { hr: 145, spo2: 97 } },
+  { id: 3, type: 'Available' },
+  { id: 4, type: 'Available' },
+  { id: 5, type: 'Available' },
+  { id: 6, type: 'Available' },
+];
+
+const INITIAL_SCHEDULES = [
+  { id: 1, time: '09:00', patient: 'Sarah Jenkins', type: 'Follicular Scan', room: '3B', color: 'purple' },
+  { id: 2, time: '10:30', patient: 'Priya Sharma', type: 'Semen Collection', room: 'Andrology', color: 'blue' },
+  { id: 3, time: '11:45', patient: 'Monica Geller', type: 'Initial Consultation', room: 'Consult 1', color: 'slate' },
+];
+
+const NOTIFICATIONS = [
+  { id: 1, type: 'registration', title: 'New Patient Registered', desc: 'Patient #P004 added to queue.', time: '5m ago', icon: User, color: 'blue', link: 'consultation' },
+  { id: 2, type: 'alert', title: 'Low Stock Alert', desc: 'Vitrification media stock < 10 units.', time: '20m ago', icon: Database, color: 'rose', link: 'art' },
+  { id: 3, type: 'lab', title: 'Lab Results Pending', desc: 'Embryo grading for #P002 requires verification.', time: '1h ago', icon: TestTube, color: 'amber', link: 'ivf' },
+  { id: 4, type: 'reminder', title: 'Consultation Reminder', desc: 'Video consult with Mrs. Nair in 15 mins.', time: '1h ago', icon: Clock, color: 'purple', link: 'consultation' },
+];
+
+const IVF_STAGES = [
+  { id: 'baseline', label: 'Baseline & Profile', icon: History, desc: 'Initial hormone profile & screens.' },
+  { id: 'stimulation', label: 'Ovarian Stimulation', icon: Activity, desc: 'Follicle tracking & medication.' },
+  { id: 'opu', label: 'OPU Log (Retrieval)', icon: Layers, desc: 'Oocyte retrieval surgical notes.' },
+  { id: 'andrology', label: 'Sperm Preparation', icon: TestTube, desc: 'Sample analysis & prep method.' },
+  { id: 'fertilization', label: 'Fertilization (ICSI)', icon: Microscope, desc: 'Day 0 insemination records.' },
+  { id: 'culture', label: 'Embryo Culture', icon: FlaskConical, desc: 'Day 1-6 development & grading.' },
+  { id: 'pgt', label: 'PGT (Genetics)', icon: Dna, desc: 'Biopsy tracking & genetic results.' },
+  { id: 'transfer', label: 'Embryo Transfer', icon: Baby, desc: 'Transfer protocol & details.' },
+  { id: 'cryo', label: 'Cryopreservation', icon: Archive, desc: 'Vitrification & storage logs.' },
+  { id: 'outcome', label: 'Outcome & B-HCG', icon: TrendingUp, desc: 'Cycle result & pregnancy tracking.' },
+];
+
+// --- Utility Components ---
+
+const Project10Logo = ({ collapsed, dark = false }) => (
+  <svg width={collapsed ? "40" : "180"} height="45" viewBox={collapsed ? "0 0 45 45" : "0 0 200 45"} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(2, 2)">
+      <path d="M20.5 8C24 8 28 10 28 15C28 22 20.5 32 20.5 32C20.5 32 13 22 13 15C13 10 17 8 20.5 8Z" fill={dark ? "#ffffff" : "#9333EA"} />
+      <circle cx="20.5" cy="13" r="3" fill={dark ? "#9333EA" : "white"} />
+      <path d="M10 20C6 20 2 24 2 24" stroke={dark ? "#f5d0fe" : "#D946EF"} strokeWidth="3" strokeLinecap="round" />
+      <path d="M31 20C35 20 39 24 39 24" stroke={dark ? "#f5d0fe" : "#D946EF"} strokeWidth="3" strokeLinecap="round" />
+    </g>
+    {!collapsed && (
+      <g transform="translate(50, 8)">
+        <text x="0" y="18" fill={dark ? "#ffffff" : "#581c87"} fontFamily="serif" fontSize="22" fontWeight="bold" letterSpacing="-0.5">Project 10</text>
+        <text x="0" y="30" fill={dark ? "#e9d5ff" : "#c026d3"} fontFamily="sans-serif" fontSize="9" fontWeight="bold" letterSpacing="2.5" style={{ textTransform: "uppercase" }}>IVF</text>
+      </g>
+    )}
+  </svg>
+);
+
+const Card = ({ children, className = "", noPadding = false, ...props }) => (
+  <div className={`bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(147,51,234,0.05)] border border-purple-50 ${className}`} {...props}>
+    <div className={noPadding ? "" : "p-6"}>
+      {children}
+    </div>
+  </div>
+);
+
+const Badge = ({ status }) => {
   const styles = {
-    success: 'bg-teal-700 border-teal-600 shadow-teal-900/20',
-    info: 'bg-blue-700 border-blue-600 shadow-blue-900/20',
-    warning: 'bg-amber-600 border-amber-500 shadow-amber-900/20',
-    error: 'bg-red-800 border-red-700 shadow-red-900/20'
+    'Active IVF': 'bg-purple-50 text-purple-800 border border-purple-100 ring-1 ring-purple-500/20',
+    'IUI Consultation': 'bg-fuchsia-50 text-fuchsia-800 border border-fuchsia-100 ring-1 ring-fuchsia-500/20',
+    'NICU Parent': 'bg-pink-50 text-pink-800 border border-pink-100 ring-1 ring-pink-500/20',
+    'Completed': 'bg-slate-100 text-slate-600 border border-slate-200',
+    'Pending': 'bg-amber-50 text-amber-800 border border-amber-100 ring-1 ring-amber-500/20',
+    'Available': 'bg-emerald-50 text-emerald-800 border border-emerald-100',
+    'Reserved': 'bg-violet-50 text-violet-800 border border-violet-100',
+    'Frozen': 'bg-blue-50 text-blue-800 border border-blue-100',
   };
-
   return (
-    <div className={`fixed bottom-6 right-6 ${styles[type] || 'bg-slate-800'} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center animate-in slide-in-from-right-10 z-50 border border-white/10 backdrop-blur-md`}>
-      {type === 'success' && <CheckCircle2 className="w-5 h-5 mr-3 text-white" />}
-      {type === 'warning' && <AlertTriangle className="w-5 h-5 mr-3 text-white" />}
-      {type === 'info' && <Activity className="w-5 h-5 mr-3 text-white" />}
-      <span className="text-sm font-semibold tracking-wide">{message}</span>
-    </div>
+    <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${styles[status] || 'bg-slate-50 text-slate-600'}`}>
+      {status}
+    </span>
   );
 };
 
-const InvoiceModal = ({ invoice, onClose }) => {
-  if (!invoice) return null;
-
-  return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden border border-slate-200 transform transition-all scale-100">
-        <div className="bg-[#0f172a] p-6 flex justify-between items-center border-b border-slate-700">
-          <div className="flex items-center text-white">
-            <div className="p-2 bg-white/10 rounded-lg mr-3">
-              <FileText className="w-6 h-6 text-teal-400" />
-            </div>
-            <div>
-              <span className="font-bold text-lg block tracking-tight">Invoice Details</span>
-              <span className="text-xs text-slate-400 font-medium tracking-wide uppercase">{invoice.id || 'INV-Generated'}</span>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-8 space-y-8">
-          <div className="flex justify-between items-start border-b border-slate-100 pb-6">
-            <div className="w-3/4">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Item Description</p>
-              <h3 className="font-bold text-[#0f172a] text-xl leading-snug">{invoice.item}</h3>
-              <div className="flex items-center mt-3 gap-2">
-                <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200 font-mono">Batch: {invoice.batch}</span>
-                <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200 font-mono">Code: 004456</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Period</p>
-              <span className="font-bold text-slate-800 bg-slate-50 px-3 py-1.5 rounded-lg text-sm border border-slate-200 block">{invoice.month}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Agreed Margin</p>
-              <p className="font-bold text-slate-800 text-xl">4.00%</p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-              <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider mb-1">Charged Margin</p>
-              <p className="font-bold text-red-700 text-xl">{invoice.margin || '5.20'}%</p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-              <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider mb-1">Excess Payout</p>
-              <p className="font-bold text-red-700 text-xl">{invoice.excess}</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-start gap-3">
-            <Info className="w-5 h-5 text-slate-400 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-slate-600 leading-relaxed">
-              This invoice has been flagged for audit. The charged margin exceeds the contractual limit of 4%. Recommended action is to withhold payment of the excess amount and notify the vendor.
-            </p>
-          </div>
-
-          <div className="flex space-x-4 pt-2">
-            <button className="flex-1 bg-[#0f172a] text-white py-3 rounded-lg text-sm font-bold hover:bg-[#1e293b] shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center">
-              <Printer className="w-4 h-4 mr-2" /> Print Record
-            </button>
-            <button className="flex-1 bg-white border border-slate-300 text-slate-700 py-3 rounded-lg text-sm font-bold hover:bg-slate-50 transition-all flex items-center justify-center">
-              <Share2 className="w-4 h-4 mr-2" /> Share Report
-            </button>
-          </div>
-        </div>
-      </div>
+const SectionHeader = ({ title, subtitle, action }) => (
+  <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 gap-4">
+    <div>
+      <h2 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">{title}</h2>
+      {subtitle && <p className="text-slate-500 text-sm mt-1 font-medium">{subtitle}</p>}
     </div>
-  );
-};
+    {action}
+  </div>
+);
 
-// --- Helper for Curve Chart ---
-const SvgCurveChart = ({ data, color = "#7f1d1d", height = 60 }) => {
-  if (!data || data.length === 0) return null;
-  const maxVal = Math.max(...data.map(d => d.amount));
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - (d.amount / maxVal) * 100;
-    return `${x},${y}`;
-  }).join(" ");
-
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={`gradient-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d={`M 0 100 L ${points} L 100 100 Z`}
-        fill={`url(#gradient-${color})`}
-        stroke="none"
-      />
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        points={points}
-        vectorEffect="non-scaling-stroke"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {data.map((d, i) => (
-        <circle
-          key={i}
-          cx={(i / (data.length - 1)) * 100}
-          cy={100 - (d.amount / maxVal) * 100}
-          r="2.5"
-          fill="white"
-          stroke={color}
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-          className="hover:r-4 transition-all cursor-pointer"
-        />
-      ))}
-    </svg>
-  );
-};
-
-// --- Details View Component (Now integrated) ---
-const DetailsView = ({ onBack }) => {
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Mock detailed data
-  const allDetailedData = Array.from({ length: 50 }, (_, i) => ({
-    id: `TXN-${2025000 + i}`,
-    date: `2025-0${Math.floor(i / 10) + 4}-${(i % 28) + 1}`,
-    category: i % 3 === 0 ? 'Pharmacy Procurement' : i % 3 === 1 ? 'Operational Expense' : 'Consultant Payout',
-    description: i % 3 === 0 ? `Bulk Purchase Order #${500 + i} - MedMart` : i % 3 === 1 ? `Utility Bill - Unit ${i % 4 + 1}` : `Professional Fees - Consultant ID-${100 + i}`,
-    amount: (Math.random() * 50000 + 5000).toFixed(2),
-    status: i % 5 === 0 ? 'Pending' : 'Cleared',
-    type: i % 2 === 0 ? 'Debit' : 'Credit'
-  }));
-
-  // Filtering Logic
-  const filteredData = allDetailedData.filter(item => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'All' || item.status === selectedStatus;
-    const matchesSearch = item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesStatus && matchesSearch;
-  });
-
-  return (
-    <div className="h-screen bg-slate-50 font-sans text-slate-800 animate-in slide-in-from-right duration-500 flex flex-col w-full">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-20 shrink-0 shadow-sm">
-        <div className="w-full px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center">
-              <button
-                onClick={onBack}
-                className="mr-6 p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500 hover:text-[#0f172a] border border-transparent hover:border-slate-200"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-[#0f172a] flex items-center tracking-tight">
-                  <div className="bg-teal-50 p-2 rounded-lg mr-3 border border-teal-100">
-                    <FileText className="w-5 h-5 text-teal-700" />
-                  </div>
-                  Consolidated Cash Flow Details
-                </h1>
-                <p className="text-sm text-slate-500 mt-1 ml-1">Reporting Period: <span className="font-semibold text-slate-700">April 2025 - October 2025</span></p>
-              </div>
-            </div>
-            <div className="flex space-x-4 relative">
-              <button
-                onClick={() => setFilterOpen(!filterOpen)}
-                className={`flex items-center px-4 py-2.5 border rounded-lg text-sm font-semibold transition-all shadow-sm ${filterOpen || selectedCategory !== 'All' || selectedStatus !== 'All'
-                    ? 'bg-slate-100 border-slate-300 text-slate-900'
-                    : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-                  }`}
-              >
-                <Filter className="w-4 h-4 mr-2" /> Filter
-                {(selectedCategory !== 'All' || selectedStatus !== 'All') && (
-                  <span className="ml-2 w-2 h-2 bg-teal-600 rounded-full animate-pulse"></span>
-                )}
-              </button>
-
-              {/* Filter Dropdown */}
-              {filterOpen && (
-                <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 p-5 z-30 animate-in fade-in slide-in-from-top-2 ring-1 ring-black/5">
-                  <div className="mb-5">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
-                    >
-                      <option value="All">All Categories</option>
-                      <option value="Pharmacy Procurement">Pharmacy Procurement</option>
-                      <option value="Operational Expense">Operational Expense</option>
-                      <option value="Consultant Payout">Consultant Payout</option>
-                    </select>
-                  </div>
-                  <div className="mb-5">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
-                    <div className="flex space-x-2">
-                      {['All', 'Cleared', 'Pending'].map(status => (
-                        <button
-                          key={status}
-                          onClick={() => setSelectedStatus(status)}
-                          className={`flex-1 py-2 text-xs rounded-lg border font-medium transition-all ${selectedStatus === status
-                              ? 'bg-teal-50 border-teal-200 text-teal-800 shadow-sm'
-                              : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-                            }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex justify-end pt-3 border-t border-slate-100">
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('All');
-                        setSelectedStatus('All');
-                      }}
-                      className="text-xs font-semibold text-slate-500 hover:text-teal-700 mr-4 transition-colors"
-                    >
-                      Reset Defaults
-                    </button>
-                    <button
-                      onClick={() => setFilterOpen(false)}
-                      className="text-xs font-bold bg-[#0f172a] text-white px-4 py-2 rounded-lg hover:bg-[#1e293b] transition-colors"
-                    >
-                      Apply Filters
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <button className="flex items-center px-5 py-2.5 bg-[#0f172a] text-white rounded-lg text-sm font-semibold hover:bg-[#1e293b] hover:shadow-lg transition-all shadow-slate-900/20">
-                <Download className="w-4 h-4 mr-2" /> Export Report
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto w-full px-8 py-8">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><ArrowUpRight className="w-16 h-16 text-emerald-600" /></div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Inflow</p>
-            <div className="flex items-baseline">
-              <span className="text-slate-400 text-lg mr-1 font-medium">₹</span>
-              <p className="text-3xl font-black text-emerald-700">4.2 Cr</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><ArrowUpRight className="w-16 h-16 text-red-600 rotate-180" /></div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Total Outflow</p>
-            <div className="flex items-baseline">
-              <span className="text-slate-400 text-lg mr-1 font-medium">₹</span>
-              <p className="text-3xl font-black text-red-700">3.8 Cr</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative overflow-hidden">
-            <div className="absolute right-0 top-0 h-full w-1.5 bg-gradient-to-b from-teal-500 to-emerald-500"></div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Net Cash Flow</p>
-            <p className="text-3xl font-black text-[#0f172a]">+₹40 L</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Pending Clearance</p>
-            <div className="flex items-center">
-              <p className="text-3xl font-black text-amber-600 mr-2">12</p>
-              <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded-full uppercase">Transactions</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Table */}
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50 shrink-0">
-            <div className="relative max-w-lg w-full group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 sm:text-sm transition-all shadow-sm"
-                placeholder="Search by transaction ID, category, or description..."
-              />
-            </div>
-            <span className="text-sm font-semibold text-slate-600 bg-white px-4 py-1.5 rounded-full border border-slate-200 shadow-sm">
-              Showing <span className="text-teal-700 font-bold">{filteredData.length}</span> / {allDetailedData.length} Records
-            </span>
-          </div>
-
-          <div className="overflow-x-auto flex-1">
-            <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
-                <tr>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">ID</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Description</th>
-                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-widest">Amount</th>
-                  <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-50">
-                {filteredData.length > 0 ? (
-                  filteredData.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-[#0f172a] font-mono group-hover:text-teal-700 transition-colors">{row.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">{row.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${row.category === 'Pharmacy Procurement' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                            row.category === 'Consultant Payout' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                              'bg-slate-100 text-slate-600 border-slate-200'
-                          }`}>
-                          {row.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 max-w-sm truncate font-medium" title={row.description}>{row.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`font-bold ${row.type === 'Credit' ? 'text-emerald-700' : 'text-slate-400'}`}>
-                          {row.type}
-                        </span>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-bold font-mono ${row.type === 'Credit' ? 'text-emerald-700' : 'text-[#0f172a]'}`}>
-                        {row.type === 'Debit' ? '-' : '+'}₹{Number(row.amount).toLocaleString('en-IN')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                        {row.status === 'Cleared' ? (
-                          <div className="flex items-center justify-center">
-                            <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span className="text-xs font-bold uppercase">Cleared</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <div className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span className="text-xs font-bold uppercase">Pending</span>
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-24 text-center text-slate-500">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="bg-slate-50 p-6 rounded-full mb-4 border border-slate-100">
-                          <Search className="w-10 h-10 text-slate-300" />
-                        </div>
-                        <p className="text-lg font-bold text-slate-700">No transactions found</p>
-                        <p className="text-sm text-slate-400 mt-1 max-w-sm">We couldn't find any records matching your current filters or search term.</p>
-                        <button
-                          onClick={() => {
-                            setSearchTerm('');
-                            setSelectedCategory('All');
-                            setSelectedStatus('All');
-                          }}
-                          className="mt-6 text-teal-700 bg-teal-50 border border-teal-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-teal-100 transition-colors"
-                        >
-                          Clear all filters
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between shrink-0">
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">
-                  Showing <span className="font-bold text-slate-800">{filteredData.length > 0 ? 1 : 0}</span> to <span className="font-bold text-slate-800">{filteredData.length > 50 ? 50 : filteredData.length}</span> of <span className="font-bold text-slate-800">{allDetailedData.length}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
-                  <button className="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 transition-colors">
-                    Previous
-                  </button>
-                  <button className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                    1
-                  </button>
-                  <button className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-[#0f172a] text-white text-sm font-bold">
-                    2
-                  </button>
-                  <button className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                    3
-                  </button>
-                  <span className="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-slate-50 text-sm font-medium text-slate-700">
-                    ...
-                  </span>
-                  <button className="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50 transition-colors">
-                    Next
-                  </button>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+// Toast Component
+const Toast = ({ message, onClose }) => (
+  <div className="fixed bottom-6 right-6 bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in z-[200]">
+    <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900">
+      <Check size={14} strokeWidth={3} />
     </div>
-  );
-};
+    <span className="font-bold text-sm">{message}</span>
+    <button onClick={onClose} className="ml-4 text-slate-400 hover:text-white"><X size={16} /></button>
+  </div>
+);
 
-// --- Main Application ---
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState('mis');
-  const [accountingStandard, setAccountingStandard] = useState('IGAAP');
-  const [isGeneratingCF, setIsGeneratingCF] = useState(false);
-  const [cfGenerated, setCfGenerated] = useState(false);
-  const [showCFDetails, setShowCFDetails] = useState(false);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'details'
-
-  // UI State
-  const [notification, setNotification] = useState(null);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-
-  // Metrics State
-  const [metricsType, setMetricsType] = useState('financial'); // 'financial' or 'operational'
-
-  const showNotification = (message, type = 'info') => {
-    setNotification({ message, type });
-  };
-
-  const handleStandardChange = (standard) => {
-    if (standard === accountingStandard) return;
-    setAccountingStandard(standard);
-    showNotification(`Recalculating metrics for ${standard === 'INDAS' ? 'IND AS (IPO)' : 'Indian GAAP'}...`, 'info');
-  };
-
-  const handleGenerateCF = () => {
-    // Reset states to allow re-generation
-    setCfGenerated(false);
-    setShowCFDetails(false);
-    setIsGeneratingCF(true);
-
-    setTimeout(() => {
-      setIsGeneratingCF(false);
-      setCfGenerated(true);
-      showNotification('Consolidated Cash Flow statement generated successfully.', 'success');
-    }, 1500);
-  };
-
-  const handleExportCF = () => {
-    showNotification('Downloading "CX_Partners_CF_Format.xlsx"...', 'success');
-  };
-
-  const handleViewInvoice = (invoice) => {
-    setSelectedInvoice(invoice);
-  };
-
-  // --- Departments and Doctors Data ---
-  const departmentsData = [
-    { name: "Critical Care Medicine", doctors: ["Dr. Sarah Thomas", "Dr. Rahul Krishnan"] },
-    { name: "Obstetrics and Gynaecology", doctors: ["Dr. Lakshmi Nair", "Dr. Priya Varghese", "Dr. Anita George"] },
-    { name: "Pediatrics and Neonatology", doctors: ["Dr. Suresh Kumar", "Dr. Meera Chandran"] },
-    { name: "Paediatric Urology", doctors: ["Dr. Anand Menon"] },
-    { name: "Orthopaedics", doctors: ["Dr. Vikram Reddy", "Dr. Joseph Kurian"] },
-    { name: "Urology And Andrology", doctors: ["Dr. Harish Pillai"] },
-    { name: "Ophthalmology", doctors: ["Dr. Susan Jacob"] },
-    { name: "General Surgery", doctors: ["Dr. Mathew Philip", "Dr. Thomas Zachariah"] },
-    { name: "Cardiology", doctors: ["Dr. Vijayaraghavan", "Dr. Deepa S"] },
-    { name: "Endocrinology", doctors: ["Dr. Ravi Shankar"] },
-    { name: "Psychology", doctors: ["Dr. Neha Gupta"] },
-    { name: "Respiratory Medicine", doctors: ["Dr. George Samuel"] },
-    { name: "Fetal Medicine", doctors: ["Dr. Renu Rajan"] },
-    { name: "Neurology", doctors: ["Dr. Krishnadas"] },
-    { name: "Dermatology", doctors: ["Dr. Aparna Balan"] },
-    { name: "Gastroenterology", doctors: ["Dr. Manoj Abraham"] },
-    { name: "Oncology", doctors: ["Dr. Sreejith G"] },
-    { name: "ENT", doctors: ["Dr. Vinod V"] }
-  ];
-
-  // --- Real Data derived directly from the analysis files (SUMMARY.csv) ---
-  const monthlyLeakage = [
-    { month: 'Apr', amount: 3.02, color: 'bg-rose-200' }, // 302,498
-    { month: 'May', amount: 3.61, color: 'bg-rose-200' }, // 361,773
-    { month: 'Jun', amount: 19.36, color: 'bg-rose-500' }, // 1,936,996
-    { month: 'Jul', amount: 11.26, color: 'bg-rose-400' }, // 1,126,163
-    { month: 'Aug', amount: 27.45, color: 'bg-red-700' }, // 2,745,974 - Darker red for peak
-    { month: 'Sep', amount: 4.32, color: 'bg-red-300' }, // 432,403
-    { month: 'Oct', amount: 15.41, color: 'bg-red-500' }, // 1,541,420
-    { month: 'Nov', amount: 0, color: 'bg-slate-200' },   // No data in summary
-    { month: 'Dec', amount: 0, color: 'bg-slate-200' },
-  ];
-
-  // Updated Violations Data with Margin % derived from EXCESS>30K.csv and Month files
-  const violations = [
-    { month: "Apr '25", item: "DUPHASTON 10MG TAB", batch: "SAVA5005", excess: "₹69,317", margin: "22.72", status: "CRITICAL", statusColor: "bg-red-100 text-red-800 border border-red-200" },
-    { month: "May '25", item: "DUPHASTON 10MG TAB", batch: "SAVA5011", excess: "₹64,985", margin: "22.72", status: "CRITICAL", statusColor: "bg-red-100 text-red-800 border border-red-200" },
-    { month: "May '25", item: "FOLISURGE 1200 IU", batch: "7070145", excess: "₹33,313", margin: "5.15", status: "HIGH RISK", statusColor: "bg-orange-100 text-orange-800 border border-orange-200" },
-    { month: "Jun '25", item: "RECAGON 300IU", batch: "B120512", excess: "₹52,450", margin: "5.30", status: "CRITICAL", statusColor: "bg-red-100 text-red-800 border border-red-200" },
-    { month: "Jul '25", item: "VISANNE 28 TAB", batch: "WEX9K3", excess: "₹1,59,053", margin: "4.85", status: "CRITICAL", statusColor: "bg-red-100 text-red-800 border border-red-200" },
-    { month: "Jul '25", item: "REVERSEE INJ 100MG", batch: "1988039.", excess: "₹65,103", margin: "5.20", status: "CRITICAL", statusColor: "bg-red-100 text-red-800 border border-red-200" },
-    { month: "Aug '25", item: "ZERODOL SP TAB", batch: "FND0725", excess: "₹32,480", margin: "5.30", status: "HIGH RISK", statusColor: "bg-orange-100 text-orange-800 border border-orange-200" },
-    { month: "Sep '25", item: "ZERODOL TC TAB", batch: "0125008BH", excess: "₹28,020", margin: "4.51", status: "WARNING", statusColor: "bg-amber-50 text-amber-700 border border-amber-100" },
-    { month: "Oct '25", item: "3M AVAGARD HANDRUB", batch: "R092506", excess: "₹35,999", margin: "4.17", status: "WARNING", statusColor: "bg-amber-50 text-amber-700 border border-amber-100" },
-  ];
-
-  // Mock data for the prototype
-  const units = [
-    { name: 'Unit 1 (HQ)', revenue: 12.5, ebitda: 3.2 },
-    { name: 'Unit 2', revenue: 8.4, ebitda: 2.1 },
-    { name: 'Unit 3', revenue: 5.2, ebitda: 1.1 },
-    { name: 'Unit 4', revenue: 4.8, ebitda: 0.9 }
-  ];
-
-  // Extended Navigation Menu
-  const navItems = [
-    { id: 'mis', icon: BarChart3, label: 'Consolidated MIS', category: 'financial' },
-    { id: 'financial_stmts', icon: FileBarChart, label: 'Financial Statements', category: 'financial' },
-    { id: 'metrics', icon: PieChart, label: 'Performance Metrics', category: 'financial' },
-    { id: 'payouts', icon: Stethoscope, label: 'Variable Pay Engine', category: 'hr' },
-    { id: 'rcm', icon: Briefcase, label: 'Revenue Cycle (RCM)', category: 'financial' },
-    { id: 'pharmacy', icon: Pill, label: 'MedMart Analysis', category: 'operations' },
-    { id: 'inventory', icon: Truck, label: 'Inventory & Procurement', category: 'operations' },
-    { id: 'ivf', icon: Activity, label: 'Clinical Ops & SOP', category: 'clinical' },
-    { id: 'doctor_portal', icon: Users, label: 'Doctor Self-Service', category: 'clinical' },
-    { id: 'assets', icon: Landmark, label: 'Capex & Assets', category: 'operations' },
-    { id: 'budget', icon: Target, label: 'Budget vs Actuals', category: 'financial' },
-    { id: 'ipo', icon: LayoutGrid, label: 'IPO Readiness', category: 'legal' },
-    { id: 'audit', icon: ShieldCheck, label: 'Audit Trail', category: 'legal' },
-    { id: 'vendor', icon: ClipboardList, label: 'Vendor Management', category: 'operations' },
-    { id: 'system_health', icon: Server, label: 'System Health', category: 'tech' },
-    { id: 'patient_exp', icon: Smile, label: 'Patient Experience', category: 'clinical' },
-    { id: 'reports', icon: FileText, label: 'Reports Center', category: 'financial' }
-  ];
-
-  const renderSidebar = () => (
-    <div className="w-64 bg-[#0f172a] text-slate-300 flex flex-col h-screen fixed left-0 top-0 overflow-y-auto border-r border-slate-800 scrollbar-thin scrollbar-thumb-slate-700">
-      <div className="p-6 bg-[#061a2e] flex flex-col items-center sticky top-0 z-10 border-b border-slate-800">
-        <div className="w-12 h-12 bg-pink-600 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-pink-600/30 overflow-hidden relative">
-          {/* Custom Mother & Baby Composite Icon */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            <div className="absolute left-2.5 top-2">
-              <Users className="text-white w-6 h-6" />
-            </div>
-            <div className="absolute right-2.5 bottom-2.5">
-              <Baby className="text-pink-200 w-4 h-4" />
-            </div>
-          </div>
-        </div>
-        <h1 className="text-white font-bold text-lg text-center leading-tight tracking-wide">Project 10</h1>
-        <p className="text-xs text-pink-400 font-medium mt-1 uppercase tracking-wider">Financial Control</p>
-      </div>
-
-      <nav className="flex-1 py-6">
-        <ul className="space-y-1">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSelectedReport(null);
-                  setCurrentView('dashboard'); // Reset view on nav change
-                }}
-                className={`w-full flex items-center px-6 py-2.5 text-sm font-medium transition-all duration-200 ${activeTab === item.id
-                    ? 'bg-white/10 text-pink-400 border-r-4 border-pink-500'
-                    : 'hover:bg-white/5 hover:text-white'
-                  }`}
-              >
-                <item.icon className={`w-4 h-4 mr-3 ${activeTab === item.id ? 'text-pink-400' : 'text-slate-400'}`} />
-                <span className="truncate">{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="p-6 text-xs text-slate-500 border-t border-slate-800 mt-auto bg-[#081e35]">
-        <p>Tech Consultant Profile</p>
-        <p className="mt-1">System Status: <span className="text-green-400 font-semibold">Live API</span></p>
-      </div>
-    </div>
-  );
-
-  const renderTopBar = () => (
-    <div className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
-      <h2 className="text-xl font-bold text-[#0a2540] capitalize flex items-center">
-        <span className="w-2 h-6 bg-pink-600 rounded-full mr-3"></span>
-        {activeTab.replace('_', ' ').replace('-', ' ')}
-      </h2>
-
-      <div className="flex items-center space-x-6">
-        <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          <button
-            onClick={() => handleStandardChange('IGAAP')}
-            className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${accountingStandard === 'IGAAP' ? 'bg-white text-[#0a2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
-          >
-            Indian GAAP
-          </button>
-          <button
-            onClick={() => handleStandardChange('INDAS')}
-            className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${accountingStandard === 'INDAS' ? 'bg-white text-pink-700 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700'
-              }`}
-          >
-            IND AS (IPO Ready)
-          </button>
-        </div>
-
-        <button
-          onClick={handleGenerateCF}
-          disabled={isGeneratingCF}
-          className="bg-[#0a2540] hover:bg-[#153a5f] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors disabled:opacity-70 shadow-lg shadow-blue-900/20"
-        >
-          {isGeneratingCF ? (
-            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <TrendingUp className="w-4 h-4 mr-2" />
-          )}
-          {isGeneratingCF ? 'Consolidating...' : 'Generate Cash Flow'}
+// Generic Modal Component
+const Modal = ({ title, onClose, children }) => (
+  <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-purple-50">
+        <h3 className="text-xl font-bold text-slate-900 font-serif">{title}</h3>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50">
+          <X size={20} />
         </button>
       </div>
-    </div>
-  );
-
-  const renderMetrics = () => {
-    // Helper to generate a 12-month array
-    const generateTrend = (base, variance) =>
-      Array.from({ length: 12 }, () => base + (Math.random() * variance - variance / 2));
-
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    // Mock data for cities
-    const cityData = [
-      {
-        id: 'unit1',
-        name: 'Unit 1 (HQ)',
-        financial: { revenue: generateTrend(120, 20), ebitda: generateTrend(32, 5) },
-        operational: { opd: generateTrend(4500, 500), occupancy: generateTrend(85, 10) },
-        color: 'bg-blue-500'
-      },
-      {
-        id: 'unit2',
-        name: 'Unit 2',
-        financial: { revenue: generateTrend(80, 15), ebitda: generateTrend(21, 4) },
-        operational: { opd: generateTrend(3200, 400), occupancy: generateTrend(75, 12) },
-        color: 'bg-emerald-500'
-      },
-      {
-        id: 'unit3',
-        name: 'Unit 3',
-        financial: { revenue: generateTrend(50, 10), ebitda: generateTrend(11, 3) },
-        operational: { opd: generateTrend(2100, 300), occupancy: generateTrend(65, 15) },
-        color: 'bg-amber-500'
-      },
-      {
-        id: 'unit4',
-        name: 'Unit 4',
-        financial: { revenue: generateTrend(45, 8), ebitda: generateTrend(9, 2) },
-        operational: { opd: generateTrend(1800, 200), occupancy: generateTrend(60, 10) },
-        color: 'bg-pink-500'
-      }
-    ];
-
-    // Calc totals
-    const totalRev = cityData.reduce((acc, city) => acc + city.financial.revenue.reduce((a, b) => a + b, 0), 0);
-    const totalOpd = cityData.reduce((acc, city) => acc + city.operational.opd.reduce((a, b) => a + b, 0), 0);
-
-    // Pie Chart Data (Simple CSS Conic Gradient approximation)
-    const pieGradient = `conic-gradient(
-      #3b82f6 0% 40%, 
-      #10b981 40% 67%, 
-      #f59e0b 67% 84%, 
-      #ec4899 84% 100%
-    )`;
-
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        {/* Toggle Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-[#0a2540] flex items-center">
-              <PieChart className="w-6 h-6 mr-2 text-pink-600" />
-              Annual Performance Metrics (2025)
-            </h3>
-            <p className="text-sm text-slate-500 mt-1">Comprehensive 12-month analysis across all hospital units.</p>
-          </div>
-          <div className="flex bg-slate-100 p-1 rounded-lg">
-            <button
-              onClick={() => setMetricsType('financial')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${metricsType === 'financial'
-                  ? 'bg-white text-[#0a2540] shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Financial (Revenue/EBITDA)
-            </button>
-            <button
-              onClick={() => setMetricsType('operational')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${metricsType === 'operational'
-                  ? 'bg-white text-pink-600 shadow-sm font-bold'
-                  : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Operational (OPD/Occupancy)
-            </button>
-          </div>
-        </div>
-
-        {/* Overall Summary Cards with Pie Chart */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-            <h4 className="text-sm font-bold text-slate-500 mb-4 uppercase">Revenue Share</h4>
-            <div className="w-32 h-32 rounded-full relative" style={{ background: pieGradient }}>
-              <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold text-slate-400">By Unit</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2 mt-4 text-[10px]">
-              <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Unit 1</span>
-              <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>Unit 2</span>
-              <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Unit 3</span>
-              <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-pink-500 mr-1"></span>Unit 4</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-3 grid grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600">
-              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Total Annual Revenue</p>
-              <div className="flex items-baseline mt-2">
-                <IndianRupee className="w-5 h-5 text-slate-400 mr-1" />
-                <h3 className="text-3xl font-bold text-[#0a2540]">{(totalRev / 10).toFixed(1)} Cr</h3>
-              </div>
-              <p className="text-xs text-green-600 mt-2 font-medium flex items-center">
-                <TrendingUp className="w-3 h-3 mr-1" /> +14% YoY Growth
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500">
-              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Total Annual OPD</p>
-              <div className="flex items-baseline mt-2">
-                <Users className="w-5 h-5 text-slate-400 mr-1" />
-                <h3 className="text-3xl font-bold text-[#0a2540]">{totalOpd.toLocaleString()}</h3>
-              </div>
-              <p className="text-xs text-green-600 mt-2 font-medium flex items-center">
-                <TrendingUp className="w-3 h-3 mr-1" /> +8.5% YoY Growth
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
-              <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Avg. Bed Occupancy</p>
-              <div className="flex items-baseline mt-2">
-                <BedDouble className="w-5 h-5 text-slate-400 mr-1" />
-                <h3 className="text-3xl font-bold text-[#0a2540]">72.4%</h3>
-              </div>
-              <p className="text-xs text-slate-400 mt-2">Target: 75%</p>
-            </div>
-          </div>
-        </div>
-
-        {/* City Wise Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {cityData.map((city) => (
-            <div key={city.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="font-bold text-lg text-[#0a2540] flex items-center">
-                  <Building2 className={`w-5 h-5 mr-2 ${city.color.replace('bg-', 'text-')}`} />
-                  {city.name}
-                </h4>
-                <div className={`text-xs px-2 py-1 rounded text-white font-bold ${city.color}`}>
-                  {metricsType === 'financial' ? 'Rev Trend' : 'OPD Trend'}
-                </div>
-              </div>
-
-              {/* 12-Month Chart */}
-              <div className="h-48 flex items-end space-x-2 mb-4 pt-6"> {/* Increased height for labels */}
-                {(metricsType === 'financial' ? city.financial.revenue : city.operational.opd).map((val, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center group relative">
-                    {/* Value Label above bar */}
-                    <div className="mb-1 text-[10px] font-bold text-slate-600 opacity-80">
-                      {Math.round(val)}
-                    </div>
-                    <div
-                      className={`w-full rounded-t-sm transition-all hover:brightness-110 ${city.color}`}
-                      style={{ height: `${(val / (metricsType === 'financial' ? 150 : 6000)) * 100}%`, minHeight: '4px' }}
-                    ></div>
-                  </div>
-                ))}
-              </div>
-
-              {/* X-Axis Labels */}
-              <div className="flex justify-between text-[10px] text-slate-400 border-t border-slate-100 pt-1">
-                {months.map(m => <span key={m}>{m}</span>)}
-              </div>
-
-              {/* Summary Stats Row */}
-              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase">
-                    {metricsType === 'financial' ? 'Total Revenue' : 'Total OPD'}
-                  </p>
-                  <p className="text-lg font-bold text-slate-700">
-                    {metricsType === 'financial'
-                      ? `₹${city.financial.revenue.reduce((a, b) => a + b, 0).toFixed(1)} L`
-                      : city.operational.opd.reduce((a, b) => a + b, 0).toLocaleString()
-                    }
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 uppercase">
-                    {metricsType === 'financial' ? 'EBITDA Margin' : 'Avg Occupancy'}
-                  </p>
-                  <p className={`text-lg font-bold ${metricsType === 'financial' ? 'text-green-600' : 'text-blue-600'}`}>
-                    {metricsType === 'financial'
-                      ? '26.5%' // Mock average
-                      : `${Math.round(city.operational.occupancy.reduce((a, b) => a + b, 0) / 12)}%`
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="p-6">
+        {children}
       </div>
-    );
+    </div>
+  </div>
+);
+
+// --- Modules ---
+
+const ConsultationModule = ({ showToast }) => {
+  const [activeTab, setActiveTab] = useState('details');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [patients, setPatients] = useState(INITIAL_PATIENTS);
+  const [newPatient, setNewPatient] = useState({ firstName: '', lastName: '', phone: '' });
+
+  const filteredPatients = patients.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    const id = `P00${patients.length + 1}`;
+    setPatients([{ id, name: `${newPatient.firstName} ${newPatient.lastName}`, age: 30, status: 'IUI Consultation', doctor: 'Dr. Anjali', contact: newPatient.phone, bloodGroup: 'O+' }, ...patients]);
+    setShowRegistration(false);
+    showToast(`Patient ${newPatient.firstName} registered successfully.`);
+    setNewPatient({ firstName: '', lastName: '', phone: '' });
   };
 
-  const renderReports = () => {
-    if (selectedReport === 'medmart') {
-      return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="Consultation & Counselling"
+        subtitle="Manage patient intake, clinical history, and counselling sessions."
+        action={
           <button
-            onClick={() => setSelectedReport(null)}
-            className="flex items-center text-slate-500 hover:text-[#0a2540] mb-4 text-sm font-medium transition-colors"
+            onClick={() => setShowRegistration(true)}
+            className="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition shadow-lg shadow-purple-900/20 font-medium"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Reports List
+            <Plus size={18} /> New Patient
           </button>
+        }
+      />
 
-          {/* Report Paper Container */}
-          <div className="bg-white p-8 md:p-12 shadow-xl rounded-sm max-w-4xl mx-auto border border-slate-200">
-            {/* Header */}
-            <div className="flex justify-between items-start border-b-2 border-[#0a2540] pb-6 mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-[#0a2540]">Internal Audit Report</h1>
-                <p className="text-slate-500 mt-2 text-sm uppercase tracking-wider font-semibold">Subject: MedMart Procurement Analysis</p>
-                <p className="text-slate-500 mt-1 text-sm">Period: April 2025 - October 2025</p>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center justify-end text-[#0a2540] font-bold text-xl mb-1">
-                  <HeartPulse className="w-6 h-6 mr-2 text-pink-600" /> Project 10
-                </div>
-                <p className="text-xs text-slate-400">Financial Control Tower</p>
-                <p className="text-xs text-slate-400">Generated: {new Date().toLocaleDateString()}</p>
-              </div>
-            </div>
-
-            {/* Executive Summary */}
-            <div className="mb-8 bg-slate-50 p-6 rounded border-l-4 border-pink-500">
-              <h2 className="text-lg font-bold text-[#0a2540] mb-3 uppercase tracking-wide">1. Executive Summary</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                    A forensic analysis of MedMart procurement data reveals a significant breach in the agreed 4% margin cap.
-                    The total excess payout detected for the period amounts to <strong>₹84.47 Lakhs</strong>.
-                  </p>
-                  <p className="text-slate-700 text-sm leading-relaxed">
-                    The leakage correlates strongly with bulk procurement cycles for high-value Clinical & hormonal drugs.
-                    Immediate corrective action involves implementing a real-time API block on invoices exceeding the threshold.
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded border border-slate-200 shadow-sm">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Total Financial Impact</p>
-                  <p className="text-3xl font-bold text-red-600">₹84,47,230</p>
-                  <p className="text-xs text-red-400 mt-1 flex items-center">
-                    <AlertTriangle className="w-3 h-3 mr-1" /> Unapproved Excess Payout
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Monthly Breakdown */}
-            <div className="mb-8">
-              <h2 className="text-lg font-bold text-[#0a2540] mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">2. Monthly Variance Trend</h2>
-              <div className="h-48 w-full bg-slate-50 rounded border border-slate-100 flex items-end p-4 space-x-4 relative">
-                {/* Curve Overlay */}
-                <div className="absolute inset-0 p-4 pointer-events-none opacity-50">
-                  <SvgCurveChart data={monthlyLeakage.filter(m => m.amount > 0 || m.month === 'Apr')} color="#0a2540" />
-                </div>
-
-                {monthlyLeakage.map((item, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center z-10">
-                    <div className="text-[10px] font-bold text-slate-600 mb-1">₹{item.amount}L</div>
-                    <div
-                      className={`w-full ${item.color} rounded-t-sm`}
-                      style={{ height: item.amount > 0 ? `${(item.amount / 30) * 100}%` : '2px' }}
-                    ></div>
-                    <div className="text-[10px] text-slate-500 mt-2 transform -rotate-45 origin-top-left translate-y-2">{item.month}</div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <Card className="lg:col-span-4 h-[750px] flex flex-col" noPadding>
+          <div className="p-6 border-b border-purple-50 bg-white rounded-t-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-slate-900 font-serif text-lg">Patient Queue</h3>
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterMenu(!showFilterMenu)}
+                  className={`p-2 rounded-lg transition ${statusFilter !== 'All' ? 'bg-purple-100 text-purple-700' : 'text-slate-400 hover:text-purple-700 hover:bg-purple-50'}`}
+                >
+                  <Filter size={18} />
+                </button>
+                {showFilterMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2">
+                    {['All', 'Active IVF', 'IUI Consultation', 'NICU Parent'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => { setStatusFilter(status); setShowFilterMenu(false); }}
+                        className={`w-full text-left px-4 py-2 text-sm ${statusFilter === status ? 'bg-purple-50 text-purple-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        {status}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <p className="text-xs text-slate-500 italic mt-4 text-center">Fig 1.1: Visual representation of monthly excess payout in Lakhs (INR).</p>
-            </div>
-
-            {/* Violations Table */}
-            <div className="mb-8">
-              <h2 className="text-lg font-bold text-[#0a2540] mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">3. Key Violations (Sample Data)</h2>
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-600 font-semibold border-b border-slate-300">
-                    <th className="p-3">Month</th>
-                    <th className="p-3">Item Name</th>
-                    <th className="p-3">Batch</th>
-                    <th className="p-3 text-right">Margin %</th>
-                    <th className="p-3 text-right">Excess Payout</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {violations.slice(0, 6).map((v, i) => (
-                    <tr key={i} className="border-b border-slate-100">
-                      <td className="p-2 text-slate-600">{v.month}</td>
-                      <td className="p-2 text-[#0a2540] font-medium">{v.item}</td>
-                      <td className="p-2 text-slate-500 font-mono text-xs">{v.batch}</td>
-                      <td className="p-2 text-right font-bold text-red-600">{v.margin}%</td>
-                      <td className="p-2 text-right font-bold text-red-600">{v.excess}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="mt-12 flex justify-between items-center pt-6 border-t border-slate-200 print:hidden">
-              <p className="text-xs text-slate-400">Project 10 Financial Control Tower v2.1</p>
-              <div className="flex space-x-4">
-                <button onClick={() => window.print()} className="flex items-center text-[#0a2540] hover:text-pink-600 font-medium transition-colors">
-                  <Printer className="w-4 h-4 mr-2" /> Print Report
-                </button>
-                <button className="flex items-center bg-[#0a2540] text-white px-4 py-2 rounded hover:bg-pink-600 transition-colors">
-                  <Download className="w-4 h-4 mr-2" /> Download PDF
-                </button>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Default Reports List View
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            onClick={() => setSelectedReport('medmart')}
-            className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-pink-200 cursor-pointer transition-all group"
-          >
-            <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
-            </div>
-            <h3 className="text-lg font-bold text-[#0a2540] mb-2 group-hover:text-pink-600 transition-colors">MedMart Margin Audit</h3>
-            <p className="text-sm text-slate-500 mb-4">Forensic analysis of pharmacy procurement, highlighting 4% cap breaches and itemized leakage.</p>
-            <div className="flex justify-between items-center text-xs font-medium text-slate-400">
-              <span>Updated: Today</span>
-              <span className="flex items-center text-blue-600">View Report <ChevronRight className="w-3 h-3 ml-1" /></span>
+            <div className="relative group">
+              <Search className="absolute left-3 top-3 text-slate-400 group-focus-within:text-purple-600 transition-colors" size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search name or ID..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all shadow-inner"
+              />
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 opacity-60 cursor-not-allowed">
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-              <RefreshCw className="w-6 h-6 text-blue-500" />
-            </div>
-            <h3 className="text-lg font-bold text-[#0a2540] mb-2">Consolidated Cash Flow</h3>
-            <p className="text-sm text-slate-500 mb-4">Monthly cash flow statement aligned with IND AS standards for IPO readiness.</p>
-            <div className="flex justify-between items-center text-xs font-medium text-slate-400">
-              <span>Generating...</span>
-              <span className="flex items-center">Processing <RefreshCw className="w-3 h-3 ml-1 animate-spin" /></span>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 opacity-60 cursor-not-allowed">
-            <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center mb-4">
-              <Stethoscope className="w-6 h-6 text-indigo-500" />
-            </div>
-            <h3 className="text-lg font-bold text-[#0a2540] mb-2">Variable Pay Disbursal</h3>
-            <p className="text-sm text-slate-500 mb-4">Automated calculation of doctor payouts based on procedure volume and agreed revenue share.</p>
-            <div className="flex justify-between items-center text-xs font-medium text-slate-400">
-              <span>Pending Approval</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderPayouts = () => {
-    // Flatten doctors list for table display (just taking first 6 for demo)
-    const flatDocList = departmentsData.flatMap(dept =>
-      dept.doctors.map(doc => ({
-        name: doc,
-        dept: dept.name,
-        // Generating random realistic stats
-        procedures: Math.floor(Math.random() * 50) + 10,
-        opd: Math.floor(Math.random() * 200) + 50,
-        payout: (Math.random() * 8 + 2).toFixed(2) // in Lakhs
-      }))
-    ).slice(0, 15); // Show top 15
-
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-[#0a2540] flex items-center mb-2">
-                <Stethoscope className="w-5 h-5 mr-2 text-blue-600" />
-                Automated Variable Pay Engine
-              </h3>
-              <p className="text-sm text-slate-500">Replaces manual Excel compilation. Rules codified based on CEO/Investor agreements. Zero month-end spillover.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-              <h4 className="font-semibold text-[#0a2540] mb-2">Consultant - Payout Rules</h4>
-              <ul className="text-sm space-y-2 text-slate-600">
-                <li className="flex justify-between"><span>OPD Consultations:</span> <span className="font-medium">20% Cut</span></li>
-                <li className="flex justify-between"><span>Standard Procedure:</span> <span className="font-medium">15% Cut</span></li>
-                <li className="flex justify-between"><span>Complex Procedures:</span> <span className="font-medium">25% Cut</span></li>
-              </ul>
-            </div>
-            <div className="border border-blue-100 rounded-lg p-4 bg-blue-50 flex flex-col justify-center items-center text-center">
-              <CheckCircle2 className="w-8 h-8 text-blue-600 mb-2" />
-              <h4 className="font-bold text-blue-900">100% System Calculated</h4>
-              <p className="text-xs text-blue-700 mt-1">Manual intervention disabled. Audit trail active.</p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="bg-slate-50 text-slate-500 text-sm border-y border-slate-200">
-                  <th className="p-3 font-medium">Doctor Name</th>
-                  <th className="p-3 font-medium">Department</th>
-                  <th className="p-3 font-medium">Volume (Month)</th>
-                  <th className="p-3 font-medium">Generated Payout</th>
-                  <th className="p-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {flatDocList.map((doc, i) => (
-                  <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="p-3 font-medium text-[#0a2540]">{doc.name}</td>
-                    <td className="p-3 text-slate-500 text-xs font-medium uppercase tracking-wide">{doc.dept}</td>
-                    <td className="p-3 text-slate-600">{doc.procedures} Proc / {doc.opd} OPD</td>
-                    <td className="p-3 font-bold text-[#0a2540]">₹{doc.payout} L</td>
-                    <td className="p-3"><span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">Ready to disburse</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderAudit = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] flex items-center mb-6">
-          <FileText className="w-5 h-5 mr-2 text-pink-600" />
-          Internal Financial Controls (IFC) Audit Trail
-        </h3>
-
-        <div className="space-y-4">
-          <div className="p-4 border border-red-200 bg-red-50 rounded-lg flex items-start">
-            <AlertTriangle className="w-5 h-5 text-red-600 mr-3 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-red-900 text-sm flex items-center">
-                MATERIAL WEAKNESS DETECTED: MedMart Procurement
-                <span className="ml-2 bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full border border-red-200">High Severity</span>
-              </h4>
-              <p className="text-sm text-red-800 mt-1">
-                <span className="font-bold">Deficiency:</span> Existing controls failed to prevent/detect purchase margins exceeding the 4% cap, resulting in a <strong>material misstatement of ₹84.47L</strong> (Apr-Oct '25).
-                <br />
-                <span className="font-bold">Remediation:</span> Automated API validation deployed. Invoices {'>'}4% margin are now auto-rejected effectively closing this control gap.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 border border-emerald-200 bg-emerald-50 rounded-lg flex items-start">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 mr-3 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-emerald-900 text-sm">Control Deficiency Resolved: Variable Pay Delays</h4>
-              <p className="text-sm text-emerald-800 mt-1">
-                <span className="font-bold">Status:</span> <strong>Effective.</strong> Manual calculation (prone to error) replaced by Business Rules Engine. Reasonable assurance obtained that doctor payouts match HIS procedure data 100%.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 border border-emerald-200 bg-emerald-50 rounded-lg flex items-start">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 mr-3 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-emerald-900 text-sm">Significant Deficiency Closed: Clinical Billing (SOP)</h4>
-              <p className="text-sm text-emerald-800 mt-1">
-                <span className="font-bold">Status:</span> <strong>Effective.</strong> Billing system now strictly enforces SOP templates. Risk of revenue leakage from unbilled consumables is now mitigated.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg flex items-start">
-            <RefreshCw className="w-5 h-5 text-amber-600 mr-3 mt-0.5 animate-spin" />
-            <div>
-              <h4 className="font-bold text-amber-900 text-sm">Ongoing Observation: IND AS Transition</h4>
-              <p className="text-sm text-amber-800 mt-1">
-                <span className="font-bold">Status:</span> <strong>In Progress.</strong> Dual-ledger system active to ensure financial statements are free of material misstatement during the IPO transition.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMIS = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Top KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Consolidated Revenue', value: '₹30.9 Cr', trend: '+12%', color: 'border-blue-600', icon: 'text-blue-600' },
-          { label: 'Consolidated EBITDA', value: '₹7.3 Cr', trend: '+8%', color: 'border-pink-600', icon: 'text-pink-600' },
-          { label: 'MedMart Cost Leakage', value: '₹84.47 L', trend: '+Alert', color: 'border-red-500', icon: 'text-red-500', note: 'Exceeds 4% margin' },
-          { label: 'Unreconciled Payouts', value: '₹0.00', trend: '100% Auto', color: 'border-violet-500', icon: 'text-violet-500' }
-        ].map((kpi, i) => (
-          <div key={i} className={`bg-white p-5 rounded-xl border-l-4 shadow-sm hover:shadow-md transition-shadow ${kpi.color}`}>
-            <div className="flex justify-between items-start mb-2">
-              <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
-              <Activity className={`w-4 h-4 ${kpi.icon} opacity-50`} />
-            </div>
-            <div className="flex items-baseline space-x-2">
-              <h3 className="text-2xl font-bold text-[#0a2540]">{kpi.value}</h3>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${kpi.trend === '+Alert' ? 'text-red-700 bg-red-50 border-red-100' : 'text-emerald-700 bg-emerald-50 border-emerald-100'}`}>{kpi.trend}</span>
-            </div>
-            {kpi.note && <p className="text-xs text-slate-400 mt-2 flex items-center"><AlertTriangle className="w-3 h-3 mr-1" /> {kpi.note}</p>}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Unit Wise Consolidation */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-[#0a2540] flex items-center">
-              <Building2 className="w-5 h-5 mr-2 text-blue-600" />
-              Automated Unit-Wise Consolidation
-            </h3>
-            <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium border border-blue-100">Real-time TB Sync</span>
-          </div>
-          <div className="space-y-5">
-            {units.map((unit, i) => (
-              <div key={i}>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium text-[#0a2540]">{unit.name}</span>
-                  <span className="text-slate-500">₹{unit.revenue} Cr Rev / ₹{unit.ebitda} Cr EBITDA</span>
+          <div className="overflow-y-auto flex-1 divide-y divide-slate-50 p-2">
+            {filteredPatients.map((p, i) => (
+              <div key={p.id} className={`p-4 mb-2 rounded-xl cursor-pointer transition-all border border-transparent ${i === 0 ? 'bg-purple-50/50 border-purple-100 shadow-sm' : 'hover:bg-slate-50'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <p className={`font-bold text-base ${i === 0 ? 'text-purple-900' : 'text-slate-700'}`}>{p.name}</p>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${i === 0 ? 'bg-white text-purple-700 border-purple-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{p.id}</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 flex overflow-hidden">
-                  <div className="bg-[#0a2540] h-2.5" style={{ width: `${(unit.revenue / 15) * 100}%` }}></div>
-                  <div className="bg-pink-500 h-2.5" style={{ width: `${(unit.ebitda / 15) * 100}%` }}></div>
+                <div className="flex justify-between items-center">
+                  <p className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                    <User size={12} /> {p.doctor}
+                  </p>
+                  <Badge status={p.status} />
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        {/* Cash Flow Generator View */}
-        <div className="bg-[#0a2540] rounded-xl shadow-lg shadow-blue-900/20 p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-pink-600 opacity-20 rounded-full -mr-12 -mt-12 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500 opacity-20 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+        <Card className="lg:col-span-8 flex flex-col h-[750px]" noPadding>
+          <div className="border-b border-purple-50 px-8 pt-8 pb-0 bg-gradient-to-b from-white to-purple-50/30 rounded-t-2xl">
+            <div className="flex items-center gap-6 mb-8">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-2xl text-purple-800 font-serif border border-purple-50 shadow-md">SJ</div>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900 font-serif">Sarah Jenkins</h3>
+                <div className="flex gap-4 text-sm text-slate-600 mt-2">
+                  <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-purple-100 shadow-sm text-xs font-medium"><User size={12} className="text-purple-600" /> 32 Yrs</span>
+                  <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-purple-100 shadow-sm text-xs font-medium"><Activity size={12} className="text-pink-500" /> O+ve</span>
+                  <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-purple-100 shadow-sm text-xs font-medium"><AlertCircle size={12} className="text-fuchsia-500" /> Penicillin</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-8">
+              {['Clinical Details', 'Counselling Notes', 'History'].map((tab) => {
+                const key = tab.split(' ')[0].toLowerCase();
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    className={`pb-4 text-sm font-bold tracking-wide transition-all relative ${activeTab === key ? 'text-purple-900' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {tab.toUpperCase()}
+                    {activeTab === key && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-600 shadow-[0_-2px_6px_rgba(147,51,234,0.4)]"></div>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
-          <h3 className="text-lg font-bold mb-4 flex items-center relative z-10">
-            <RefreshCw className="w-5 h-5 mr-2 text-pink-400" />
-            Cash Flow Automation
-          </h3>
-
-          {cfGenerated ? (
-            <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500 relative z-10">
-              <div className="p-3 bg-white/5 border border-white/10 rounded-lg flex items-center justify-between backdrop-blur-sm">
-                <div className="flex items-center">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 mr-2" />
+          <div className="p-8 overflow-y-auto flex-1 bg-white">
+            {activeTab === 'details' && (
+              <div className="space-y-8 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <p className="text-sm font-medium text-white">Process Complete</p>
-                    <p className="text-xs text-slate-300">Statement generated successfully.</p>
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                      <FileText size={14} className="text-fuchsia-500" /> Chief Complaint
+                    </label>
+                    <textarea className="w-full p-4 border border-slate-200 rounded-xl h-36 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none shadow-sm text-slate-700 bg-slate-50 hover:bg-white transition-colors" placeholder="Describe the primary reason for visit..."></textarea>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                      <Stethoscope size={14} className="text-fuchsia-500" /> Doctor's Clinical Notes
+                    </label>
+                    <textarea className="w-full p-4 border border-slate-200 rounded-xl h-36 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none shadow-sm text-slate-700 bg-slate-50 hover:bg-white transition-colors" placeholder="Enter clinical observations and diagnosis..."></textarea>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-50">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Prescription & Plan</label>
+                    <button onClick={() => showToast("Opening Prescription Template...")} className="text-purple-700 text-xs font-bold hover:underline flex items-center gap-1"><Plus size={12} /> ADD TEMPLATE</button>
+                  </div>
+                  <div className="bg-purple-50/50 p-6 rounded-xl border border-purple-100">
+                    <div className="flex gap-3 mb-6">
+                      <input type="text" placeholder="Drug Name" className="flex-1 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
+                      <input type="text" placeholder="Dosage" className="w-32 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
+                      <input type="text" placeholder="Freq" className="w-32 px-4 py-3 border border-purple-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white shadow-sm" />
+                      <button onClick={() => showToast("Medicine added to list!")} className="bg-purple-900 text-white p-3 rounded-lg hover:bg-purple-800 shadow-md transition-transform hover:scale-105"><Plus size={18} /></button>
+                    </div>
+                    <div className="bg-white rounded-lg p-10 text-center border border-dashed border-purple-200">
+                      <p className="text-slate-500 text-sm font-medium">No medicines added to this prescription yet.</p>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => setCurrentView('details')}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center transition-colors"
-                >
-                  <Eye className="w-4 h-4 mr-2" /> View Details
-                </button>
-                <button
-                  onClick={handleExportCF}
-                  className="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-2.5 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-lg shadow-pink-600/20"
-                >
-                  <FileDown className="w-4 h-4 mr-2" /> Export Report
-                </button>
+          <div className="p-6 border-t border-purple-50 bg-white rounded-b-2xl flex justify-between items-center">
+            <span className="text-xs font-medium text-slate-400 flex items-center gap-2"><Clock size={12} /> Last auto-saved: 2 mins ago</span>
+            <div className="flex gap-4">
+              <button onClick={() => showToast("Changes discarded")} className="px-6 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg font-bold text-sm transition">Discard</button>
+              <button onClick={() => showToast("Consultation Saved Successfully!")} className="px-6 py-2.5 bg-purple-900 text-white rounded-lg flex items-center gap-2 hover:bg-purple-800 shadow-lg shadow-purple-900/20 font-bold text-sm transition transform hover:-translate-y-0.5">
+                <Save size={18} /> Save Records
+              </button>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {showRegistration && (
+        <Modal title="Patient Registration" onClose={() => setShowRegistration(false)}>
+          <form className="space-y-4" onSubmit={handleRegister}>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">First Name</label><input required type="text" onChange={e => setNewPatient({ ...newPatient, firstName: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Last Name</label><input required type="text" onChange={e => setNewPatient({ ...newPatient, lastName: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
+            </div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Date of Birth</label><input type="date" className="w-full p-2 border rounded-lg" /></div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Phone Number</label><input required type="tel" onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} className="w-full p-2 border rounded-lg" /></div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Register Patient</button>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const IUIProtocolModule = ({ showToast }) => {
+  const [showAddScan, setShowAddScan] = useState(false);
+  const [showMeds, setShowMeds] = useState(false);
+  const [showSperm, setShowSperm] = useState(false);
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="IUI Protocol"
+        subtitle="Intrauterine Insemination Cycle Management."
+        action={
+          <button onClick={() => showToast("IUI Cycle Initiated for Patient")} className="bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg font-bold hover:bg-purple-800 transition"><Plus size={18} /> Start IUI Cycle</button>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <Card className="p-6 h-full flex flex-col">
+          <h3 className="font-bold text-lg mb-4 text-purple-900 border-b border-purple-100 pb-2">Follicular Monitoring</h3>
+          <div className="space-y-4 flex-1">
+            {[1, 2, 3].map(day => (
+              <div key={day} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div>
+                  <span className="font-bold text-slate-700 block text-sm">Day {day * 3}</span>
+                  <span className="text-xs text-slate-500">14mm, 12mm (RO)</span>
+                </div>
+                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">Recorded</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setShowAddScan(true)} className="w-full mt-6 py-3 border-2 border-dashed border-purple-200 text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition">+ Add Scan Data</button>
+        </Card>
+
+        <Card className="p-6 h-full flex flex-col">
+          <h3 className="font-bold text-lg mb-4 text-purple-900 border-b border-purple-100 pb-2">Stimulation Protocol</h3>
+          <div className="space-y-4 flex-1">
+            <div className="bg-white border border-slate-100 p-3 rounded-lg flex gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg text-purple-600"><Pill size={20} /></div>
+              <div>
+                <p className="font-bold text-sm text-slate-800">Clomiphene Citrate</p>
+                <p className="text-xs text-slate-500">50mg • CD 3-7</p>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-48 text-center text-slate-400 relative z-10">
-              <FileText className="w-12 h-12 mb-3 opacity-30 text-pink-200" />
-              <p className="text-sm text-slate-300">Consolidated CF not generated yet for current period.</p>
-              <p className="text-xs mt-2 text-slate-400">Click "Generate Cash Flow" above.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* NEW SECTION: Consolidated MedMart Analysis */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-[#0a2540] flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-red-500" />
-            Consolidated MedMart Cost Leakage Trend (Apr - Oct 2025)
-          </h3>
-          <span className="text-sm font-medium text-slate-500">Total Excess: <span className="text-red-600 font-bold">₹84.47 L</span></span>
-        </div>
-        {/* Reusing the chart logic */}
-        <div className="h-48 w-full bg-slate-50 rounded border border-slate-100 flex items-end p-4 space-x-4 relative">
-          {/* Curve Overlay */}
-          <div className="absolute inset-0 p-4 pointer-events-none opacity-50">
-            <SvgCurveChart data={monthlyLeakage.filter(m => m.amount > 0 || m.month === 'Apr')} color="#0a2540" />
-          </div>
-
-          {monthlyLeakage.filter(m => m.amount > 0 || m.month === 'Apr').map((item, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center group relative z-10">
-              {/* Tooltip */}
-              <div className="absolute -top-10 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
-                ₹{item.amount}L
+            <div className="bg-white border border-slate-100 p-3 rounded-lg flex gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg text-purple-600"><Pill size={20} /></div>
+              <div>
+                <p className="font-bold text-sm text-slate-800">HMG Injection</p>
+                <p className="text-xs text-slate-500">75 IU • CD 7,9</p>
               </div>
-              <div
-                className={`w-full ${item.color} rounded-t-sm transition-all duration-500`}
-                style={{ height: `${(item.amount / 30) * 100}%` }}
-              ></div>
-              <div className="text-xs font-medium text-slate-500 mt-2">{item.month}</div>
             </div>
-          ))}
-        </div>
-        <p className="text-xs text-slate-400 mt-4 text-center">
-          Aggregated analysis of purchase margins exceeding 4% cap. Peak leakage observed in August 2025 (₹27.46L).
-        </p>
+          </div>
+          <button onClick={() => setShowMeds(true)} className="w-full mt-6 py-3 bg-purple-100 text-purple-700 font-bold rounded-xl hover:bg-purple-200 transition">Adjust Meds</button>
+        </Card>
+
+        <Card className="p-6 h-full flex flex-col">
+          <h3 className="font-bold text-lg mb-4 text-purple-900 border-b border-purple-100 pb-2">Sperm Preparation</h3>
+          <div className="space-y-6 flex-1">
+            <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Pre-Wash Motility</label><p className="font-bold text-slate-800 text-xl">45%</p></div>
+            <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Post-Wash Motility</label><p className="font-bold text-emerald-600 text-xl">90%</p></div>
+            <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Technique</label><p className="font-bold text-slate-800">Double Density Gradient</p></div>
+          </div>
+          <button onClick={() => setShowSperm(true)} className="w-full mt-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Update Analysis</button>
+        </Card>
       </div>
+
+      {showAddScan && (
+        <Modal title="Add IUI Scan" onClose={() => setShowAddScan(false)}>
+          <form className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-xs font-bold text-slate-500 uppercase">Right Ovary</label><input type="text" className="w-full p-2 border rounded-lg" placeholder="18mm" /></div>
+              <div><label className="text-xs font-bold text-slate-500 uppercase">Left Ovary</label><input type="text" className="w-full p-2 border rounded-lg" placeholder="16mm" /></div>
+            </div>
+            <div><label className="text-xs font-bold text-slate-500 uppercase">Endometrium</label><input type="text" className="w-full p-2 border rounded-lg" placeholder="8mm" /></div>
+            <button onClick={(e) => { e.preventDefault(); setShowAddScan(false); showToast("IUI Scan Data Saved") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Scan</button>
+          </form>
+        </Modal>
+      )}
+
+      {showMeds && (
+        <Modal title="Adjust Medication" onClose={() => setShowMeds(false)}>
+          <form className="space-y-4">
+            <input type="text" className="w-full p-2 border rounded-lg" placeholder="Drug Name" />
+            <input type="text" className="w-full p-2 border rounded-lg" placeholder="Dosage" />
+            <button onClick={(e) => { e.preventDefault(); setShowMeds(false); showToast("Protocol Updated") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Update Protocol</button>
+          </form>
+        </Modal>
+      )}
+
+      {showSperm && (
+        <Modal title="Sperm Analysis" onClose={() => setShowSperm(false)}>
+          <form className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-xs font-bold text-slate-500 uppercase">Count (M/ml)</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+              <div><label className="text-xs font-bold text-slate-500 uppercase">Motility (%)</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            </div>
+            <button onClick={(e) => { e.preventDefault(); setShowSperm(false); showToast("Andrology Data Saved") }} className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Analysis</button>
+          </form>
+        </Modal>
+      )}
     </div>
-  );
+  )
+}
 
-  // --- Render Functions for New Modules ---
+const IVFProcessSuite = ({ showToast }) => {
+  const [activeStage, setActiveStage] = useState('baseline');
 
-  const renderFinancialStmts = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <FileBarChart className="w-5 h-5 mr-2 text-pink-600" />
-          Financial Statements (IND AS)
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h4 className="font-semibold text-slate-700 mb-3">Profit & Loss (P&L)</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Revenue from Operations</span><span className="font-medium">₹48.2 Cr</span></div>
-              <div className="flex justify-between"><span>Direct Expenses (COGS)</span><span className="font-medium text-red-600">(₹18.4 Cr)</span></div>
-              <div className="flex justify-between border-t border-slate-300 pt-1 font-bold"><span>Gross Profit</span><span className="text-emerald-600">₹29.8 Cr</span></div>
-            </div>
-          </div>
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h4 className="font-semibold text-slate-700 mb-3">Balance Sheet Summary</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Non-Current Assets</span><span className="font-medium">₹120.5 Cr</span></div>
-              <div className="flex justify-between"><span>Current Assets</span><span className="font-medium">₹45.2 Cr</span></div>
-              <div className="flex justify-between border-t border-slate-300 pt-1 font-bold"><span>Total Assets</span><span className="text-[#0a2540]">₹165.7 Cr</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // State for functionality
+  const [baselineData, setBaselineData] = useState({ amh: '--', fsh: '--', lh: '--', tsh: '--' });
+  const [infDiseases, setInfDiseases] = useState({ HBsAg: 'PENDING', HCV: 'PENDING', HIV: 'PENDING', VDRL: 'PENDING' });
+  const [meds, setMeds] = useState([{ name: 'Gonal-F', dose: '225 IU', note: 'Daily 9PM' }]);
+  const [scansRT, setScansRT] = useState([18, 17, 16, 14, 12]);
+  const [scansLT, setScansLT] = useState([16, 15, 14, 11, 10]);
+  const [opuCounts, setOpuCounts] = useState({ total: 12, mii: 8, degen: 1 });
+  const [clinicalNotes, setClinicalNotes] = useState([]);
 
-  const renderRCM = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
-          Revenue Cycle Management
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-xs text-blue-600 font-medium">Claims Pending ({'>'}90 Days)</p>
-            <p className="text-2xl font-bold text-blue-900 mt-1">₹1.2 Cr</p>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg">
-            <p className="text-xs text-red-600 font-medium">Claim Rejection Rate</p>
-            <p className="text-2xl font-bold text-red-900 mt-1">4.2%</p>
-          </div>
-          <div className="bg-emerald-50 p-4 rounded-lg">
-            <p className="text-xs text-emerald-600 font-medium">Collection Efficiency</p>
-            <p className="text-2xl font-bold text-emerald-900 mt-1">92%</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Modals state
+  const [activeModal, setActiveModal] = useState(null); // 'baseline', 'scan', 'med', 'opu', 'notes'
+  const [modalInput, setModalInput] = useState({});
 
-  const renderInventory = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Truck className="w-5 h-5 mr-2 text-amber-500" />
-          Inventory & Procurement Intelligence
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 border border-slate-200 rounded-lg">
-            <h4 className="font-semibold text-slate-700 text-sm mb-2">Near Expiry Alert (Next 30 Days)</h4>
-            <ul className="text-sm space-y-2 text-red-600">
-              <li className="flex justify-between"><span>Recagon 300IU</span> <span className="font-mono">12 Units</span></li>
-              <li className="flex justify-between"><span>Meropenem Inj</span> <span className="font-mono">45 Units</span></li>
-            </ul>
-          </div>
-          <div className="p-4 border border-slate-200 rounded-lg">
-            <h4 className="font-semibold text-slate-700 text-sm mb-2">Stock Valuation (ABC Analysis)</h4>
-            <div className="flex items-end h-24 space-x-2">
-              <div className="w-1/3 bg-emerald-500 h-[80%] rounded-t flex items-center justify-center text-white text-xs">Cat A (70%)</div>
-              <div className="w-1/3 bg-blue-400 h-[20%] rounded-t flex items-center justify-center text-white text-xs">Cat B (20%)</div>
-              <div className="w-1/3 bg-slate-300 h-[10%] rounded-t flex items-center justify-center text-slate-600 text-xs">Cat C</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Handlers
+  const handleBaselineSave = (e) => {
+    e.preventDefault();
+    setBaselineData({ ...baselineData, ...modalInput });
+    setActiveModal(null);
+    showToast("Hormone Profile Updated");
+  };
 
-  const renderDoctorPortal = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-indigo-500" />
-          Doctor Self-Service Portal
-        </h3>
-        <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100 mb-4">
-          <p className="text-sm text-indigo-900 font-medium">Logged in as: <span className="font-bold">Dr. Lakshmi Nair - OBGYN (ID: 8842)</span></p>
-          <div className="grid grid-cols-3 gap-4 mt-3">
-            <div className="bg-white p-3 rounded shadow-sm"><p className="text-xs text-slate-500">OPD Count</p><p className="font-bold text-indigo-600">452</p></div>
-            <div className="bg-white p-3 rounded shadow-sm"><p className="text-xs text-slate-500">Surgeries</p><p className="font-bold text-indigo-600">18</p></div>
-            <div className="bg-white p-3 rounded shadow-sm"><p className="text-xs text-slate-500">Est. Payout</p><p className="font-bold text-emerald-600">₹4.2 L</p></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const handleInfToggle = (key) => {
+    setInfDiseases(prev => ({
+      ...prev,
+      [key]: prev[key] === 'PENDING' ? 'NEGATIVE' : prev[key] === 'NEGATIVE' ? 'POSITIVE' : 'PENDING'
+    }));
+  };
 
-  const renderAssets = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Landmark className="w-5 h-5 mr-2 text-teal-600" />
-          Capex & Asset Management
-        </h3>
-        <table className="w-full text-sm text-left">
-          <thead className="bg-slate-50 text-slate-500">
-            <tr><th className="p-2">Asset Name</th><th className="p-2">Location</th><th className="p-2">Status</th><th className="p-2 text-right">Utilization</th></tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-slate-100"><td className="p-2">MRI Machine (3T)</td><td className="p-2">Unit 1 - Radiology</td><td className="p-2 text-emerald-600 font-medium">Active</td><td className="p-2 text-right">88%</td></tr>
-            <tr className="border-b border-slate-100"><td className="p-2">CT Scanner</td><td className="p-2">Unit 2 - Radiology</td><td className="p-2 text-emerald-600 font-medium">Active</td><td className="p-2 text-right">72%</td></tr>
-            <tr className="border-b border-slate-100"><td className="p-2">IVF Incubator #4</td><td className="p-2">Unit 1 - IVF Lab</td><td className="p-2 text-amber-500 font-medium">Maintenance</td><td className="p-2 text-right">0%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const handleMedSave = (e) => {
+    e.preventDefault();
+    setMeds([...meds, modalInput]);
+    setActiveModal(null);
+    showToast("Medication Added to Protocol");
+  };
 
-  const renderBudget = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Target className="w-5 h-5 mr-2 text-rose-500" />
-          Budget vs Actuals (Variance Analysis)
-        </h3>
-        <div className="space-y-6">
-          {/* Unit 1 */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-slate-700">Unit 1 Revenue</span>
-              <span className="text-emerald-600 font-bold">+12% vs Target</span>
-            </div>
-            <div className="relative w-full h-8 bg-slate-100 rounded-full overflow-hidden">
-              {/* Budget Marker Line at 80% (representing 100% of Budget) */}
-              <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style={{ left: '80%' }}></div>
-              <div className="absolute top-1 right-[20%] text-[10px] text-slate-500 -mt-4">Target</div>
+  const handleScanSave = (e) => {
+    e.preventDefault();
+    if (modalInput.rt) setScansRT([...scansRT, ...modalInput.rt.split(',').map(Number)]);
+    if (modalInput.lt) setScansLT([...scansLT, ...modalInput.lt.split(',').map(Number)]);
+    setActiveModal(null);
+    showToast("Follicular Scan Logged");
+  };
 
-              {/* Actual Bar: 112% of Budget = 80% * 1.12 = 89.6% of container */}
-              <div className="absolute top-0 left-0 h-full bg-emerald-500 rounded-l-full" style={{ width: '89.6%' }}></div>
-              <div className="absolute top-0 left-2 h-full flex items-center text-xs text-white font-bold">₹13.4 Cr</div>
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>0%</span>
-              <span>125%</span>
-            </div>
-          </div>
+  const handleOPUSave = (e) => {
+    e.preventDefault();
+    setOpuCounts({ ...opuCounts, ...modalInput });
+    setActiveModal(null);
+    showToast("OPU Counts Updated");
+  };
 
-          {/* Unit 2 */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-slate-700">Unit 2 Opex</span>
-              <span className="text-red-600 font-bold">+5% Over Budget</span>
-            </div>
-            <div className="relative w-full h-8 bg-slate-100 rounded-full overflow-hidden">
-              {/* Budget Marker Line at 80% */}
-              <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style={{ left: '80%' }}></div>
-
-              {/* Actual Bar: 105% of Budget = 80% * 1.05 = 84% of container */}
-              <div className="absolute top-0 left-0 h-full bg-red-500 rounded-l-full" style={{ width: '84%' }}></div>
-              <div className="absolute top-0 left-2 h-full flex items-center text-xs text-white font-bold">₹4.2 Cr</div>
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>0%</span>
-              <span>125%</span>
-            </div>
-          </div>
-
-          {/* Unit 3 (Under Budget Example) */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-slate-700">Unit 3 Marketing</span>
-              <span className="text-emerald-600 font-bold">-8% Under Budget</span>
-            </div>
-            <div className="relative w-full h-8 bg-slate-100 rounded-full overflow-hidden">
-              {/* Budget Marker Line at 80% */}
-              <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style={{ left: '80%' }}></div>
-
-              {/* Actual Bar: 92% of Budget = 80% * 0.92 = 73.6% of container */}
-              <div className="absolute top-0 left-0 h-full bg-blue-500 rounded-l-full" style={{ width: '73.6%' }}></div>
-              <div className="absolute top-0 left-2 h-full flex items-center text-xs text-white font-bold">₹85 L</div>
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>0%</span>
-              <span>125%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderIPO = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <LayoutGrid className="w-5 h-5 mr-2 text-violet-600" />
-          IPO Readiness & Data Room
-        </h3>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="p-4 border border-violet-100 bg-violet-50 rounded-lg text-center">
-            <p className="text-2xl font-bold text-violet-700">85%</p>
-            <p className="text-xs text-violet-600">DRHP Readiness</p>
-          </div>
-          <div className="p-4 border border-violet-100 bg-violet-50 rounded-lg text-center">
-            <p className="text-2xl font-bold text-violet-700">12/15</p>
-            <p className="text-xs text-violet-600">Audit Queries Closed</p>
-          </div>
-        </div>
-        <button className="w-full bg-slate-800 text-white py-2 rounded text-sm font-medium flex items-center justify-center">
-          <Lock className="w-4 h-4 mr-2" /> Access Virtual Data Room
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderVendor = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <ClipboardList className="w-5 h-5 mr-2 text-cyan-600" />
-          Vendor Management System
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500"><tr><th className="p-2">Vendor</th><th className="p-2">Category</th><th className="p-2">Compliance</th><th className="p-2">Rating</th></tr></thead>
-            <tbody>
-              <tr className="border-b border-slate-100"><td className="p-2 font-medium">MedMart Pharma</td><td className="p-2">Pharmacy</td><td className="p-2 text-red-500">Flagged</td><td className="p-2">⭐⭐</td></tr>
-              <tr className="border-b border-slate-100"><td className="p-2 font-medium">CleanCare Services</td><td className="p-2">Housekeeping</td><td className="p-2 text-emerald-600">Verified</td><td className="p-2">⭐⭐⭐⭐</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSystemHealth = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Server className="w-5 h-5 mr-2 text-slate-600" />
-          System Health & Integrations
-        </h3>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-slate-50 rounded border border-slate-200">
-            <span className="text-sm font-medium flex items-center"><Database className="w-4 h-4 mr-2 text-slate-400" /> HIS Sync (Patient Data)</span>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold">Operational</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-slate-50 rounded border border-slate-200">
-            <span className="text-sm font-medium flex items-center"><Briefcase className="w-4 h-4 mr-2 text-slate-400" /> Tally Prime (Accounting)</span>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold">Operational</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-slate-50 rounded border border-slate-200">
-            <span className="text-sm font-medium flex items-center"><Activity className="w-4 h-4 mr-2 text-slate-400" /> LIMS (Lab Data)</span>
-            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-bold">Latency: 400ms</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPatientExp = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-[#0a2540] mb-4 flex items-center">
-          <Smile className="w-5 h-5 mr-2 text-yellow-500" />
-          Patient Experience (NPS)
-        </h3>
-        <div className="flex items-center space-x-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-[#0a2540]">72</div>
-            <p className="text-xs text-slate-500 uppercase mt-1">NPS Score</p>
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex justify-between text-xs text-slate-600"><span>Promoters</span><span>75%</span></div>
-            <div className="w-full bg-slate-100 h-2 rounded-full"><div className="bg-emerald-500 h-2 rounded-full" style={{ width: '75%' }}></div></div>
-
-            <div className="flex justify-between text-xs text-slate-600"><span>Detractors</span><span>12%</span></div>
-            <div className="w-full bg-slate-100 h-2 rounded-full"><div className="bg-red-500 h-2 rounded-full" style={{ width: '12%' }}></div></div>
-          </div>
-        </div>
-        <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-200 flex items-start">
-          <Clock className="w-4 h-4 text-slate-400 mr-2 mt-0.5" />
-          <div>
-            <p className="text-xs font-bold text-slate-700">Avg. OPD Wait Time</p>
-            <p className="text-sm text-[#0a2540]">18 Mins <span className="text-xs text-green-600">(-2m vs last month)</span></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (currentView === 'details') {
-    return <DetailsView onBack={() => setCurrentView('dashboard')} />;
+  const handleNoteSave = (e) => {
+    e.preventDefault();
+    setClinicalNotes([...clinicalNotes, { ...modalInput, date: new Date().toLocaleString() }]);
+    setActiveModal(null);
+    showToast("Clinical Note Saved");
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col md:flex-row">
-      {notification && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
-      <InvoiceModal
-        invoice={selectedInvoice}
-        onClose={() => setSelectedInvoice(null)}
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="IVF Clinical Suite"
+        subtitle="Comprehensive 10-stage lifecycle management for IVF cycles."
+        action={
+          <div className="flex gap-3">
+            <button onClick={() => showToast("Consent forms loaded")} className="bg-white border border-purple-100 text-purple-700 px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-sm font-bold"><FileText size={18} /> Consent Vault</button>
+            <button onClick={() => showToast("New IVF Cycle Initialized")} className="bg-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg font-bold"><Plus size={18} /> New Cycle</button>
+          </div>
+        }
       />
 
-      <div className="hidden md:block">
-        {renderSidebar()}
+      <div className="grid grid-cols-12 gap-8">
+        <div className="col-span-12 lg:col-span-3 space-y-2">
+          {IVF_STAGES.map((stage, i) => (
+            <button
+              key={stage.id}
+              onClick={() => setActiveStage(stage.id)}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all border text-left group
+                ${activeStage === stage.id
+                  ? 'bg-purple-700 text-white border-purple-700 shadow-xl shadow-purple-900/20 translate-x-2'
+                  : 'bg-white text-slate-500 border-slate-100 hover:bg-purple-50 hover:border-purple-200'}`}
+            >
+              <div className={`p-2 rounded-lg ${activeStage === stage.id ? 'bg-white/20' : 'bg-slate-50 group-hover:bg-purple-100'}`}>
+                <stage.icon size={20} className={activeStage === stage.id ? 'text-white' : 'text-purple-600'} />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm leading-none mb-1">Stage {i + 1}: {stage.label}</p>
+                <p className={`text-[10px] ${activeStage === stage.id ? 'text-purple-200 font-medium' : 'text-slate-400 font-medium'}`}>{stage.desc}</p>
+              </div>
+              {activeStage === stage.id && <ChevronRight size={16} />}
+            </button>
+          ))}
+        </div>
+
+        <div className="col-span-12 lg:col-span-9">
+          <Card className="min-h-[750px] flex flex-col" noPadding>
+            <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-purple-50/50 to-white rounded-t-2xl flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 bg-purple-100 px-2 py-0.5 rounded-md">Phase {IVF_STAGES.findIndex(s => s.id === activeStage) + 1}</span>
+                  <span className="text-slate-300">/</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">P001: Sarah Jenkins</span>
+                </div>
+                <h3 className="text-3xl font-serif font-bold text-slate-900">{IVF_STAGES.find(s => s.id === activeStage).label}</h3>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Protocol</p>
+                  <p className="text-xl font-bold text-purple-700">Antagonist</p>
+                </div>
+                <div className="h-12 w-[1px] bg-slate-100"></div>
+                <div className="w-14 h-14 rounded-full border-4 border-slate-50 border-t-purple-600 flex items-center justify-center text-xs font-black text-purple-700 shadow-sm">
+                  {Math.round(((IVF_STAGES.findIndex(s => s.id === activeStage) + 1) / 10) * 100)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 flex-1 overflow-y-auto">
+              {/* 1. Baseline */}
+              {activeStage === 'baseline' && (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-4 gap-6">
+                    {Object.keys(baselineData).map((key) => (
+                      <div key={key} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-inner">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{key} (mIU/ml)</p>
+                        <p className="text-2xl font-bold text-slate-800">{baselineData[key]}</p>
+                        <button
+                          onClick={() => { setModalInput({ [key]: '' }); setActiveModal('baseline'); }}
+                          className="text-xs text-purple-700 font-bold mt-2 hover:underline flex items-center gap-1"
+                        >
+                          <Edit3 size={10} /> Edit
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <Card className="p-8 border-dashed border-2 bg-slate-50/30">
+                    <h4 className="font-bold text-slate-800 mb-4 font-serif">Infectious Disease Screen (Click to Toggle)</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.keys(infDiseases).map(test => (
+                        <div key={test} onClick={() => handleInfToggle(test)} className="flex justify-between items-center p-4 bg-white rounded-xl border border-slate-100 cursor-pointer hover:border-purple-300 transition-colors select-none">
+                          <span className="font-bold text-slate-600">{test}</span>
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${infDiseases[test] === 'NEGATIVE' ? 'bg-emerald-100 text-emerald-700' : infDiseases[test] === 'POSITIVE' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-500'}`}>
+                            {infDiseases[test]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              {/* 2. Stimulation */}
+              {activeStage === 'stimulation' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="bg-purple-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-xl">
+                    <div className="flex gap-10">
+                      <div><p className="text-[10px] font-bold text-purple-300 uppercase mb-1">Stim Cycle Day</p><p className="text-2xl font-bold">CD-09</p></div>
+                      <div><p className="text-[10px] font-bold text-purple-300 uppercase mb-1">Estrogen (E2)</p><p className="text-2xl font-bold">1,420 pg/ml</p></div>
+                    </div>
+                    <button onClick={() => setActiveModal('scan')} className="bg-white text-purple-900 px-6 py-2 rounded-xl font-bold text-sm shadow-md flex items-center gap-2"><Plus size={14} /> Add Scan</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Activity size={18} className="text-purple-600" /> Follicle Tracking (RT)</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">{scansRT.map((s, i) => <div key={i} className="flex justify-between text-sm p-2 bg-slate-50 rounded-lg"><span className="text-slate-500">Follicle #{i + 1}</span><span className="font-bold text-purple-700">{s} mm</span></div>)}</div>
+                    </div>
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Activity size={18} className="text-fuchsia-600" /> Follicle Tracking (LT)</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">{scansLT.map((s, i) => <div key={i} className="flex justify-between text-sm p-2 bg-slate-50 rounded-lg"><span className="text-slate-500">Follicle #{i + 1}</span><span className="font-bold text-fuchsia-700">{s} mm</span></div>)}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-slate-800">Medications</h4>
+                      <button onClick={() => setActiveModal('med')} className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold hover:bg-purple-200">+ Add Dose</button>
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {meds.map((m, i) => (
+                        <div key={i} className="bg-white border border-slate-200 p-4 rounded-xl min-w-[150px] shadow-sm">
+                          <p className="text-[10px] text-purple-400 font-bold uppercase">{m.name}</p>
+                          <p className="text-lg font-bold text-slate-800">{m.dose}</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{m.note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. OPU Log */}
+              {activeStage === 'opu' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                    <h4 className="font-bold text-slate-800 mb-4">Oocyte Retrieval Summary</h4>
+                    <div className="grid grid-cols-3 gap-6 text-center">
+                      <div className="p-4 bg-white rounded-xl shadow-sm"><p className="text-xs font-bold text-slate-400">Total Oocytes</p><p className="text-3xl font-bold text-purple-700">{opuCounts.total}</p></div>
+                      <div className="p-4 bg-white rounded-xl shadow-sm"><p className="text-xs font-bold text-slate-400">MII (Mature)</p><p className="text-3xl font-bold text-emerald-600">{opuCounts.mii}</p></div>
+                      <div className="p-4 bg-white rounded-xl shadow-sm"><p className="text-xs font-bold text-slate-400">Degenerated</p><p className="text-3xl font-bold text-rose-500">{opuCounts.degen}</p></div>
+                    </div>
+                  </div>
+                  <button onClick={() => setActiveModal('opu')} className="w-full p-4 border-2 border-dashed border-purple-200 rounded-xl text-purple-600 font-bold hover:bg-purple-50 transition">+ Update Procedure Counts</button>
+                </div>
+              )}
+
+              {/* 4. Andrology */}
+              {activeStage === 'andrology' && (
+                <div className="space-y-8 animate-fade-in">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                      <h4 className="font-bold text-slate-800 mb-2">Pre-Wash Parameters</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Volume</span><span className="font-bold">2.5 ml</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Count</span><span className="font-bold">45 M/ml</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Motility</span><span className="font-bold">55%</span></div>
+                      </div>
+                    </div>
+                    <div className="p-6 bg-purple-50 border border-purple-100 rounded-2xl shadow-sm">
+                      <h4 className="font-bold text-purple-900 mb-2">Post-Wash (Final)</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm"><span className="text-purple-700">Method</span><span className="font-bold">Density Gradient</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-purple-700">Count</span><span className="font-bold">38 M/ml</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-purple-700">Motility</span><span className="font-bold">95%</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 5. Fertilization */}
+              {activeStage === 'fertilization' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 text-slate-500 font-bold"><tr><th className="p-4 text-left">Oocyte #</th><th className="p-4 text-left">Insem. Method</th><th className="p-4 text-left">Sperm Source</th><th className="p-4 text-left">Fertilization Check (18h)</th></tr></thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                          <tr key={n}>
+                            <td className="p-4 font-bold text-slate-700">O-{n}</td>
+                            <td className="p-4">ICSI</td>
+                            <td className="p-4">Husband</td>
+                            <td className="p-4"><span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs font-bold">2PN (Normal)</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. Embryo Culture */}
+              {activeStage === 'culture' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="flex gap-4 mb-4">
+                    {['Day 1', 'Day 3', 'Day 5', 'Day 6'].map(day => (
+                      <button key={day} className="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-purple-100 hover:text-purple-700 font-bold text-sm transition">{day}</button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map(n => (
+                      <div key={n} className="p-4 border border-slate-200 rounded-xl bg-white text-center">
+                        <div className="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-2 flex items-center justify-center text-xs text-slate-400">Embryo Img</div>
+                        <p className="font-bold text-purple-900">E-{n}</p>
+                        <p className="text-xs font-bold text-emerald-600">4AA (Blast)</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 8. Transfer */}
+              {activeStage === 'transfer' && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100">
+                    <h4 className="font-bold text-purple-900 mb-4">Transfer Details</h4>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div><label className="text-xs text-slate-500 uppercase font-bold">Embryos Transferred</label><p className="font-bold text-slate-800">2 (E-1, E-3)</p></div>
+                      <div><label className="text-xs text-slate-500 uppercase font-bold">Catheter</label><p className="font-bold text-slate-800">Wallace Soft</p></div>
+                      <div><label className="text-xs text-slate-500 uppercase font-bold">Endometrium</label><p className="font-bold text-slate-800">10mm, Trilaminar</p></div>
+                      <div><label className="text-xs text-slate-500 uppercase font-bold">Difficulty</label><p className="font-bold text-slate-800">Easy</p></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Generic Placeholder for remaining screens */}
+              {['pgt', 'cryo', 'outcome'].includes(activeStage) && (
+                <div className="h-full flex flex-col items-center justify-center text-center p-12 animate-fade-in">
+                  <div className="w-24 h-24 bg-purple-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                    <Microscope size={48} className="text-purple-300" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-slate-800 font-serif">{IVF_STAGES.find(s => s.id === activeStage).label} Workspace</h4>
+                  <p className="text-slate-500 max-w-sm mt-3 font-medium">This professional interface is designed for end-to-end medical data capture in the {IVF_STAGES.find(s => s.id === activeStage).label} phase.</p>
+                  <div className="mt-10 flex gap-4">
+                    <button onClick={() => setActiveModal('notes')} className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg">New Data Entry</button>
+                  </div>
+                  {clinicalNotes.length > 0 && (
+                    <div className="w-full mt-8 text-left bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <h5 className="font-bold text-slate-700 mb-2">Recent Log Entries:</h5>
+                      {clinicalNotes.map((n, i) => <p key={i} className="text-sm text-slate-600 border-b border-slate-100 last:border-0 py-2">{n.date}: {n.note}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Stage Footer */}
+            <div className="p-8 border-t border-slate-100 bg-white rounded-b-2xl flex justify-between items-center shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.02)]">
+              <div className="flex gap-8">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Clinician Verified</span>
+                </div>
+              </div>
+              <button onClick={() => showToast("Stage Synced Successfully!")} className="bg-purple-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-purple-900/20 transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                <Save size={20} /> Save Progress & Sync
+              </button>
+            </div>
+          </Card>
+        </div>
       </div>
 
-      {/* Mobile Sidebar Replacement / Menu could go here, for now just hidden on mobile */}
+      {/* --- Modals for IVF Suite --- */}
 
-      <main className="flex-1 md:ml-64 w-full">
-        {renderTopBar()}
-        <div className="p-4 md:p-8 max-w-6xl mx-auto">
-          {activeTab === 'mis' && renderMIS()}
-          {activeTab === 'pharmacy' && renderPharmacy()}
-          {activeTab === 'payouts' && renderPayouts()}
-          {activeTab === 'audit' && renderAudit()}
-          {activeTab === 'ivf' && renderIVF()}
-          {activeTab === 'reports' && renderReports()}
-          {activeTab === 'metrics' && renderMetrics()}
+      {activeModal === 'baseline' && (
+        <Modal title="Update Hormone Level" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleBaselineSave} className="space-y-4">
+            {Object.keys(modalInput).map(key => (
+              <div key={key}>
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Enter Value for {key}</label>
+                <input type="number" step="0.1" autoFocus className="w-full p-3 border rounded-lg" value={modalInput[key] || ''} onChange={e => setModalInput({ ...modalInput, [key]: e.target.value })} required />
+              </div>
+            ))}
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold">Update Record</button>
+          </form>
+        </Modal>
+      )}
 
-          {/* Render new modules */}
-          {activeTab === 'financial_stmts' && renderFinancialStmts()}
-          {activeTab === 'rcm' && renderRCM()}
-          {activeTab === 'inventory' && renderInventory()}
-          {activeTab === 'doctor_portal' && renderDoctorPortal()}
-          {activeTab === 'assets' && renderAssets()}
-          {activeTab === 'budget' && renderBudget()}
-          {activeTab === 'ipo' && renderIPO()}
-          {activeTab === 'vendor' && renderVendor()}
-          {activeTab === 'system_health' && renderSystemHealth()}
-          {activeTab === 'patient_exp' && renderPatientExp()}
+      {activeModal === 'scan' && (
+        <Modal title="Add Scan Data" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleScanSave} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Right Ovary (comma sep)</label><input type="text" placeholder="18, 16, 14" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, rt: e.target.value })} /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Left Ovary (comma sep)</label><input type="text" placeholder="15, 12, 10" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, lt: e.target.value })} /></div>
+            </div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save Measurements</button>
+          </form>
+        </Modal>
+      )}
+
+      {activeModal === 'med' && (
+        <Modal title="Add Medication" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleMedSave} className="space-y-4">
+            <input type="text" placeholder="Drug Name" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, name: e.target.value })} required />
+            <input type="text" placeholder="Dose" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, dose: e.target.value })} required />
+            <input type="text" placeholder="Instructions" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, note: e.target.value })} required />
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold">Add Prescription</button>
+          </form>
+        </Modal>
+      )}
+
+      {activeModal === 'opu' && (
+        <Modal title="Update Procedure Counts" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleOPUSave} className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Total</label><input type="number" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, total: Number(e.target.value) })} /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">MII</label><input type="number" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, mii: Number(e.target.value) })} /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Degen</label><input type="number" className="w-full p-2 border rounded-lg" onChange={e => setModalInput({ ...modalInput, degen: Number(e.target.value) })} /></div>
+            </div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold">Update OPU Log</button>
+          </form>
+        </Modal>
+      )}
+
+      {activeModal === 'notes' && (
+        <Modal title="Clinical Entry" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleNoteSave} className="space-y-4">
+            <textarea className="w-full p-3 border rounded-xl h-32" placeholder="Enter clinical observations..." onChange={e => setModalInput({ note: e.target.value })} required></textarea>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold">Save Note</button>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const ScheduleModule = ({ showToast }) => {
+  const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newAppt, setNewAppt] = useState({ time: '', patient: '', type: '', room: '' });
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleData, setRescheduleData] = useState(null);
+
+  const filteredSchedules = schedules.filter(s => {
+    if (typeFilter === 'All') return true;
+    if (typeFilter === 'Scans') return s.type.includes('Scan');
+    if (typeFilter === 'Consultations') return s.type.includes('Consultation');
+    return true;
+  });
+
+  const handleAddSchedule = (e) => {
+    e.preventDefault();
+    if (newAppt.time && newAppt.patient) {
+      setSchedules([...schedules, { id: Date.now(), ...newAppt, color: 'purple' }].sort((a, b) => a.time.localeCompare(b.time)));
+      setShowAddModal(false);
+      setNewAppt({ time: '', patient: '', type: '', room: '' });
+      showToast("Appointment Added");
+    }
+  };
+
+  const handleRescheduleSubmit = (e) => {
+    e.preventDefault();
+    setSchedules(schedules.map(s => s.id === rescheduleData.id ? rescheduleData : s).sort((a, b) => a.time.localeCompare(b.time)));
+    setShowRescheduleModal(false);
+    showToast("Schedule Updated");
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="Daily Schedule"
+        subtitle="Manage clinical appointments and procedure timings."
+        action={
+          <button onClick={() => setShowAddModal(true)} className="bg-purple-700 hover:bg-purple-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition shadow-lg shadow-purple-900/20 font-medium">
+            <Plus size={18} /> Add Appointment
+          </button>
+        }
+      />
+      <div className="grid grid-cols-12 gap-8">
+        <Card className="col-span-12 lg:col-span-8" noPadding>
+          <div className="p-6 border-b border-slate-50 flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 font-serif text-lg">Timeline View</h3>
+            <div className="relative">
+              <button onClick={() => setShowFilterMenu(!showFilterMenu)} className="p-2 text-slate-400 hover:text-purple-700 transition"><Filter size={18} /></button>
+              {showFilterMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 py-2">
+                  {['All', 'Scans', 'Consultations'].map(f => (
+                    <button key={f} onClick={() => { setTypeFilter(f); setShowFilterMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-purple-50 text-sm font-bold text-slate-600">{f}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {filteredSchedules.map((app) => (
+              <div key={app.id} className="flex items-center gap-6 p-6 hover:bg-slate-50 transition cursor-pointer group">
+                <div className="text-center min-w-[60px]">
+                  <span className="block text-xl font-bold text-slate-800">{app.time}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Today</span>
+                </div>
+                <div className={`w-1.5 h-12 rounded-full bg-purple-500`}></div>
+                <div className="flex-1">
+                  <p className="font-bold text-slate-800 text-lg">{app.type}</p>
+                  <p className="text-sm text-slate-500 font-medium">{app.patient} • <span className="text-slate-400">{app.room}</span></p>
+                </div>
+                <button onClick={() => { setRescheduleData(app); setShowRescheduleModal(true); }} className="px-5 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-500 hover:bg-purple-50 transition">Reschedule</button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {showAddModal && (
+        <Modal title="Add New Appointment" onClose={() => setShowAddModal(false)}>
+          <form onSubmit={handleAddSchedule} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <input type="time" required value={newAppt.time} onChange={(e) => setNewAppt({ ...newAppt, time: e.target.value })} className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+              <input type="text" placeholder="Room" required value={newAppt.room} onChange={(e) => setNewAppt({ ...newAppt, room: e.target.value })} className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+            </div>
+            <input type="text" placeholder="Patient Name" required value={newAppt.patient} onChange={(e) => setNewAppt({ ...newAppt, patient: e.target.value })} className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+            <input type="text" placeholder="Type" required value={newAppt.type} onChange={(e) => setNewAppt({ ...newAppt, type: e.target.value })} className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+            <div className="pt-4 flex justify-end gap-3">
+              <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-3 text-slate-600 font-bold hover:bg-slate-50 rounded-xl">Cancel</button>
+              <button type="submit" className="px-6 py-3 bg-purple-700 text-white font-bold rounded-xl shadow-lg">Confirm</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {showRescheduleModal && (
+        <Modal title={`Reschedule: ${rescheduleData.patient}`} onClose={() => setShowRescheduleModal(false)}>
+          <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+            <input type="time" value={rescheduleData.time} onChange={e => setRescheduleData({ ...rescheduleData, time: e.target.value })} className="w-full p-3 border rounded-xl" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowRescheduleModal(false)} type="button" className="flex-1 p-3 font-bold text-slate-400">Cancel</button>
+              <button type="submit" className="flex-1 p-3 bg-purple-700 text-white font-bold rounded-xl">Update</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const PackageModule = ({ showToast }) => {
+  const [showCreate, setShowCreate] = useState(false);
+  const [packages, setPackages] = useState(INITIAL_PACKAGES);
+  const [newPackage, setNewPackage] = useState({ name: '', price: '', code: '' });
+
+  const handleCreate = (e) => {
+    e.preventDefault();
+    setPackages([...packages, { id: Date.now(), ...newPackage, code: 'PKG-NEW', includes: ['Consultation'] }]);
+    setShowCreate(false);
+    showToast("Package Created Successfully");
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="Package Management"
+        subtitle="Configure and manage treatment bundles."
+        action={
+          <button onClick={() => setShowCreate(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition shadow-lg">
+            <Plus size={18} /> Create Package
+          </button>
+        }
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {packages.map((pkg) => (
+          <Card key={pkg.id} className="group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-purple-100">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-fuchsia-500"></div>
+            <div className="flex justify-between items-start mb-6">
+              <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase bg-slate-50 px-2 py-1 rounded border border-slate-100">{pkg.code}</span>
+              <div className="bg-purple-50 p-3 rounded-xl text-purple-700 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-inner">
+                <CreditCard size={20} />
+              </div>
+            </div>
+            <h3 className="font-bold text-xl text-slate-900 mb-2 font-serif">{pkg.name}</h3>
+            <p className="text-3xl font-bold text-purple-800 mb-8 tracking-tight">{pkg.price}</p>
+            <div className="space-y-4 mb-8">
+              {pkg.includes.map((item, i) => (
+                <div key={i} className="flex items-start gap-3 text-slate-600 text-sm font-medium">
+                  <CheckCircle size={16} className="text-fuchsia-500 mt-0.5 shrink-0" />
+                  <span className="leading-tight">{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-4 pt-6 border-t border-slate-50">
+              <button onClick={() => alert("Editing Package Details...")} className="flex-1 py-2.5 text-slate-600 hover:text-slate-900 text-sm font-bold transition">Edit Details</button>
+              <button onClick={() => showToast("Package Selected for Patient")} className="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Select Package</button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {showCreate && (
+        <Modal title="Create New Package" onClose={() => setShowCreate(false)}>
+          <form className="space-y-4" onSubmit={handleCreate}>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Package Name</label><input onChange={e => setNewPackage({ ...newPackage, name: e.target.value })} type="text" className="w-full p-2 border rounded-lg" required /></div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Price</label><input onChange={e => setNewPackage({ ...newPackage, price: e.target.value })} type="text" className="w-full p-2 border rounded-lg" required /></div>
+            <button type="submit" className="w-full bg-slate-900 text-white p-3 rounded-xl font-bold mt-2">Save Package</button>
+          </form>
+        </Modal>
+      )}
+    </div>
+  )
+};
+
+const NICUModule = ({ showToast }) => {
+  const [showAdmit, setShowAdmit] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="NICU Management"
+        subtitle="Neonatal Intensive Care Unit Monitoring System"
+        action={
+          <div className="flex gap-4">
+            <button onClick={() => setShowReport(true)} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
+              <FileText size={18} /> Shift Report
+            </button>
+            <button onClick={() => setShowAdmit(true)} className="bg-purple-800 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-purple-900 shadow-lg font-bold transition">
+              <Plus size={18} /> Admit Infant
+            </button>
+          </div>
+        }
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {NICU_BEDS.map((bed) => (
+            <Card key={bed.id} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 border-none ring-1 ring-slate-100" noPadding>
+              <div className={`h-1.5 w-full ${bed.type === 'Occupied' ? 'bg-pink-500' : 'bg-emerald-500'}`}></div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-5">
+                  <span className="font-mono text-slate-400 text-[10px] font-bold tracking-widest bg-slate-50 px-2 py-1 rounded">INCUBATOR #{bed.id}</span>
+                  {bed.type === 'Occupied' ? (
+                    <span className="flex h-3 w-3 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500 border-2 border-white"></span>
+                    </span>
+                  ) : (
+                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  )}
+                </div>
+
+                {bed.type === 'Occupied' ? (
+                  <>
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="bg-pink-50 p-3 rounded-xl text-pink-500 shadow-sm border border-pink-100">
+                        <Baby size={28} />
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block text-lg font-serif">{bed.name}</span>
+                        <span className="text-xs text-slate-500 font-medium">{bed.gender} • {bed.age}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
+                      <div className="p-1">
+                        <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">Wt</span>
+                        <span className="font-bold text-slate-700 text-sm">{bed.weight}</span>
+                      </div>
+                      <div className="p-1 border-l border-slate-200">
+                        <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">HR</span>
+                        <span className="font-bold text-emerald-600 text-sm">{bed.vitals.hr}</span>
+                      </div>
+                      <div className="p-1 border-l border-slate-200">
+                        <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-wider">SpO2</span>
+                        <span className="font-bold text-emerald-600 text-sm">{bed.vitals.spo2}%</span>
+                      </div>
+                    </div>
+                    <button onClick={() => showToast("Opening Digital Chart...")} className="w-full mt-5 py-2.5 text-xs font-bold text-slate-500 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition uppercase tracking-widest border border-transparent hover:border-purple-100">
+                      View Chart
+                    </button>
+                  </>
+                ) : (
+                  <div className="h-40 flex flex-col items-center justify-center text-slate-300">
+                    <div className="bg-slate-50 p-4 rounded-full mb-3 border border-slate-100">
+                      <CheckCircle size={24} />
+                    </div>
+                    <span className="text-sm font-bold uppercase tracking-wide">Available</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="col-span-1 space-y-8">
+          <Card className="bg-slate-900 text-white border-none shadow-2xl shadow-slate-900/30">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-white/10 rounded-lg backdrop-blur-md"><Activity size={20} className="text-purple-300" /></div>
+              <h4 className="font-bold text-lg">Unit Status</h4>
+            </div>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm font-medium">Occupancy</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="w-1/3 h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                  </div>
+                  <span className="font-bold text-sm">33%</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+              <h4 className="font-bold text-slate-800">Billing & Charges</h4>
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Pending</span>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm"><span className="text-slate-500">NICU Bed Charge</span><span className="font-bold">₹ 5,000</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-500">Ventilator</span><span className="font-bold">₹ 3,500</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-500">Phototherapy</span><span className="font-bold">₹ 1,200</span></div>
+              <div className="border-t border-slate-100 pt-2 flex justify-between font-bold text-purple-900">
+                <span>Total Daily</span>
+                <span>₹ 9,700</span>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-slate-100">
+              <div className="flex justify-between items-center mb-2">
+                <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1"><Wallet size={12} /> Advance & Settlements</h5>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg text-sm space-y-2">
+                <div className="flex justify-between"><span className="text-slate-500">Total Billed</span><span className="font-bold">₹ 45,200</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Advance Paid</span><span className="font-bold text-emerald-600">₹ 20,000</span></div>
+                <div className="border-t border-slate-200 pt-1 flex justify-between"><span className="font-bold text-rose-500">Balance Due</span><span className="font-bold text-rose-500">₹ 25,200</span></div>
+              </div>
+              <button onClick={() => showToast("Payment Recorded Successfully")} className="w-full mt-3 py-2 text-xs bg-purple-700 text-white rounded-lg font-bold hover:bg-purple-800">Record Payment</button>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {showAdmit && (
+        <Modal title="NICU Admission" onClose={() => setShowAdmit(false)}>
+          <form className="space-y-4">
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Mother's Name</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Gender</label><select className="w-full p-2 border rounded-lg"><option>Male</option><option>Female</option></select></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Birth Weight</label><input type="text" className="w-full p-2 border rounded-lg" /></div>
+            </div>
+            <button onClick={(e) => { e.preventDefault(); setShowAdmit(false); showToast("Infant Admitted!") }} className="w-full bg-pink-600 text-white p-3 rounded-xl font-bold mt-2">Admit Patient</button>
+          </form>
+        </Modal>
+      )}
+      {showReport && (
+        <Modal title="Shift Report" onClose={() => setShowReport(false)}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">Generating report for current shift...</p>
+            <button onClick={(e) => { e.preventDefault(); setShowReport(false); showToast("Report Downloaded") }} className="w-full bg-slate-900 text-white p-3 rounded-xl font-bold">Download PDF</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+};
+
+const ARTBankModule = ({ showToast }) => {
+  const [showStock, setShowStock] = useState(false);
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
+  const [newStock, setNewStock] = useState({ type: 'Sperm Vial', donor: '', grade: '' });
+
+  const handleAddStock = (e) => {
+    e.preventDefault();
+    setInventory([...inventory, {
+      id: `S-${Date.now().toString().slice(-4)}`,
+      type: newStock.type,
+      donorCode: newStock.donor,
+      count: 10,
+      quality: newStock.grade,
+      status: 'Available'
+    }]);
+    setShowStock(false);
+    showToast("Inventory Updated");
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader
+        title="ART Bank & Inventory"
+        subtitle="Gamete Inventory and Legal Compliance Log"
+        action={
+          <div className="flex gap-4">
+            <button onClick={() => showToast("Exporting Compliance Data...")} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-slate-50 font-bold shadow-sm transition">
+              <FileText size={18} /> Compliance Export
+            </button>
+            <button onClick={() => setShowStock(true)} className="bg-purple-800 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-purple-900 shadow-lg font-bold transition">
+              <Plus size={18} /> Add Stock
+            </button>
+          </div>
+        }
+      />
+
+      <Card className="overflow-hidden shadow-md" noPadding>
+        <div className="flex border-b border-slate-200 bg-slate-50/50">
+          {['Inventory', 'Disposal Log', 'Donor Registry', 'Registers'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab.toLowerCase().split(' ')[0])}
+              className={`px-8 py-4 font-bold text-sm ${activeTab === tab.toLowerCase().split(' ')[0] ? 'bg-white text-purple-700 border-t-2 border-t-purple-600' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'inventory' && (
+          <table className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[11px] tracking-widest border-b border-slate-200">
+              <tr><th className="p-6">Sample ID</th><th className="p-6">Type</th><th className="p-6">Donor Code</th><th className="p-6">Count</th><th className="p-6">Grade</th><th className="p-6">Status</th></tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {inventory.map((item) => (
+                <tr key={item.id} onClick={() => showToast(`Viewing details for ${item.id}`)} className="hover:bg-slate-50 transition-colors group cursor-pointer">
+                  <td className="p-6 font-mono font-bold text-purple-900">{item.id}</td>
+                  <td className="p-6 flex items-center gap-2">{item.type}</td>
+                  <td className="p-6 font-medium">{item.donorCode}</td>
+                  <td className="p-6 font-medium">{item.count}</td>
+                  <td className="p-6"><span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-600 shadow-sm">{item.quality}</span></td>
+                  <td className="p-6"><Badge status={item.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {activeTab === 'disposal' && (
+          <div className="p-12 text-center text-slate-400">
+            <Trash2 size={48} className="mx-auto mb-4 opacity-50" />
+            <h4 className="text-xl font-bold text-slate-700 mb-2">Disposal Log Empty</h4>
+            <p className="max-w-md mx-auto">No bio-waste disposal records found for the current cycle. All expired samples are currently flagged for review.</p>
+            <button onClick={() => showToast("Disposal Log Entry Created")} className="mt-6 px-6 py-3 border border-slate-300 rounded-xl text-slate-600 font-bold hover:bg-slate-50">Log New Disposal</button>
+          </div>
+        )}
+
+        {activeTab === 'registers' && (
+          <div className="p-8 grid grid-cols-3 gap-6">
+            {['Form 1: Enrollment', 'Form 2: Oocyte Retrieval', 'Form 3: Embryo Transfer', 'Form 4: Pregnancy Outcome'].map(reg => (
+              <div key={reg} onClick={() => showToast(`Opening ${reg}`)} className="p-6 border border-slate-200 rounded-xl hover:border-purple-300 hover:shadow-md cursor-pointer transition">
+                <FileBadge size={32} className="text-purple-600 mb-4" />
+                <h4 className="font-bold text-slate-800">{reg}</h4>
+                <p className="text-xs text-slate-500 mt-2">Last Updated: Today</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'donor' && <div className="p-12 text-center text-slate-400">Donor Registry Placeholder</div>}
+      </Card>
+
+      {showStock && (
+        <Modal title="Add Inventory" onClose={() => setShowStock(false)}>
+          <form className="space-y-4" onSubmit={handleAddStock}>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Type</label><select onChange={e => setNewStock({ ...newStock, type: e.target.value })} className="w-full p-2 border rounded-lg"><option>Sperm Vial</option><option>Oocyte</option></select></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Donor Code</label><input required onChange={e => setNewStock({ ...newStock, donor: e.target.value })} type="text" className="w-full p-2 border rounded-lg" /></div>
+            </div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Quality Grade</label><input required onChange={e => setNewStock({ ...newStock, grade: e.target.value })} type="text" className="w-full p-2 border rounded-lg" /></div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Save to Registry</button>
+          </form>
+        </Modal>
+      )}
+    </div>
+  )
+};
+
+const LifeCycleModule = ({ showToast }) => (
+  <div className="space-y-8 animate-fade-in">
+    <SectionHeader
+      title="Patient Life Cycle Tracking"
+      subtitle="Longitudinal View of Patient Care Journey"
+    />
+    <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
+      <div className="flex items-center justify-between mb-12 pb-8 border-b border-slate-100">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-fuchsia-800 text-white rounded-full flex items-center justify-center font-serif text-3xl shadow-lg shadow-purple-500/30 border-4 border-white ring-1 ring-slate-100">SJ</div>
+          <div>
+            <h3 className="text-3xl font-bold text-slate-900 font-serif">Sarah Jenkins</h3>
+            <div className="flex gap-5 mt-2 text-sm text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5"><User size={14} className="text-purple-600" /> ID: P001</span>
+              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-purple-600" /> Reg: 26 Oct 2023</span>
+              <span className="flex items-center gap-1.5"><Stethoscope size={14} className="text-purple-600" /> Dr. Anjali Kumar</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <button onClick={() => showToast("Viewing Full Profile...")} className="px-6 py-2.5 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition text-slate-600">Patient Profile</button>
+          <button onClick={() => showToast("Adding New Event...")} className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md">Add Event</button>
+        </div>
+      </div>
+      <div className="relative border-l-2 border-slate-200 ml-10 space-y-12 pb-6">
+        <div className="relative pl-12 group">
+          <div className="absolute -left-[11px] top-0 w-5 h-5 bg-purple-500 rounded-full border-4 border-white ring-4 ring-purple-50 group-hover:ring-purple-100 transition-all shadow-md"></div>
+          <Card className="border-l-4 border-l-purple-500 relative overflow-visible" noPadding>
+            <div className="absolute -left-2 top-6 w-4 h-4 bg-white rotate-45 border-l border-b border-slate-200"></div>
+            <div className="p-6">
+              <div className="flex justify-between mb-3">
+                <span className="font-bold text-purple-900 text-xl font-serif">Active Cycle: IVF Stimulation</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-purple-600 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">Today</span>
+              </div>
+              <p className="text-slate-600 mb-4 font-medium leading-relaxed">Follicular scan showed 5 follicles {'>'} 14mm. Gonal-F dosage increased.</p>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Logged by Dr. Anjali Kumar</span>
+                <span className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-500 font-bold border border-slate-200">Ultrasound Report.pdf</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const DashboardModule = ({ onNavigate, showToast }) => {
+  const [activeModal, setActiveModal] = useState(null); // 'donor', 'pharmacy', 'details'
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+  // Function to simulate CSV download
+  const handleGenerateCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8,ID,Patient Name,Cycle Type,Status,Date\nP001,Sarah Jenkins,IVF,Stimulation,2023-10-26\nP002,Priya Sharma,IUI,Follicular Study,2023-10-26\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "daily_art_registry.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("CSV Report Downloaded");
+  };
+
+  const handleOpenDetails = (app) => {
+    setSelectedAppointment(app);
+    setActiveModal('details');
+  };
+
+  const handleSaveDonor = (e) => {
+    e.preventDefault();
+    setActiveModal(null);
+    showToast("New Donor Registered Successfully");
+  };
+
+  const handleSavePharmacy = (e) => {
+    e.preventDefault();
+    setActiveModal(null);
+    showToast("Pharmacy Request Sent");
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <SectionHeader title="Dashboard Overview" subtitle="Welcome back, Dr. Anjali." />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-purple-800 to-fuchsia-800 p-6 text-white shadow-xl relative overflow-hidden group hover:-translate-y-1 transition-transform cursor-pointer" onClick={() => onNavigate('ivf')}>
+          <div className="absolute top-0 right-0 p-12 bg-white/5 rounded-bl-full transform translate-x-6 -translate-y-6 group-hover:scale-110 transition-transform"></div>
+          <div className="flex justify-between items-start mb-6">
+            <div className="p-3 bg-white/10 rounded-xl backdrop-blur-md border border-white/10"><Activity size={24} className="text-purple-100" /></div>
+            <span className="text-[10px] font-bold bg-purple-500/30 px-2 py-1 rounded-md text-emerald-100 border border-purple-400/30">+12%</span>
+          </div>
+          <p className="text-purple-100/80 text-sm font-medium uppercase tracking-wider">Active IVF Cycles</p>
+          <h3 className="text-5xl font-serif font-bold mt-1 tracking-tight text-white">24</h3>
+        </Card>
+        <Card className="hover:border-purple-500/30 hover:shadow-xl transition-all group bg-white cursor-pointer" onClick={() => onNavigate('consultation')}>
+          <div className="flex justify-between items-start mb-6">
+            <div className="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><Users size={24} /></div>
+          </div>
+          <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">Today's Consultations</p>
+          <h3 className="text-4xl font-bold mt-2 text-slate-800 tracking-tight font-serif">12</h3>
+        </Card>
+        <Card className="hover:border-purple-500/30 hover:shadow-xl transition-all group bg-white cursor-pointer" onClick={() => onNavigate('nicu')}>
+          <div className="flex justify-between items-start mb-6">
+            <div className="p-3 bg-pink-50 rounded-xl text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors"><Baby size={24} /></div>
+          </div>
+          <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">NICU Occupancy</p>
+          <h3 className="text-4xl font-bold mt-2 text-slate-800 tracking-tight font-serif">33%</h3>
+        </Card>
+        <Card className="hover:border-purple-500/30 hover:shadow-xl transition-all group bg-white cursor-pointer" onClick={() => onNavigate('art')}>
+          <div className="flex justify-between items-start mb-6">
+            <div className="p-3 bg-amber-50 rounded-xl text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors"><TestTube size={24} /></div>
+          </div>
+          <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">Pending Verification</p>
+          <h3 className="text-4xl font-bold mt-2 text-slate-800 tracking-tight font-serif">5</h3>
+        </Card>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 h-full" noPadding>
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-2xl">
+            <h3 className="font-bold text-slate-800 font-serif text-lg">Today's Schedule</h3>
+            <button onClick={() => onNavigate('schedule')} className="text-xs font-bold text-purple-800 uppercase tracking-widest hover:underline flex items-center gap-1">View Calendar <ArrowRight size={12} /></button>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {INITIAL_SCHEDULES.map((app, i) => (
+              <div key={i} className="flex items-center gap-6 p-6 hover:bg-slate-50 transition cursor-pointer group">
+                <div className="text-center min-w-[60px]">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mon</span>
+                  <span className="block text-xl font-bold text-slate-800 group-hover:text-purple-700 transition-colors">{app.time}</span>
+                </div>
+                <div className={`w-1 h-12 rounded-full bg-${app.color}-500 group-hover:h-14 transition-all`}></div>
+                <div className="flex-1">
+                  <p className="font-bold text-slate-800 text-lg group-hover:text-purple-900 transition-colors">{app.type}</p>
+                  <p className="text-sm text-slate-500 font-medium">{app.patient} • <span className="text-slate-400">{app.room}</span></p>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleOpenDetails(app); }}
+                  className="ml-auto px-5 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-500 hover:text-purple-700 hover:border-purple-200 hover:bg-purple-50 transition-all"
+                >
+                  Details
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div className="space-y-6">
+          <div className="bg-slate-900 rounded-2xl p-8 text-white text-center shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/20 to-transparent pointer-events-none"></div>
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-fuchsia-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg rotate-3 group-hover:rotate-6 transition-transform">
+              <Database size={32} className="text-white" />
+            </div>
+            <h3 className="font-bold text-xl mb-3 font-serif">Daily ART Registry</h3>
+            <p className="text-slate-400 text-sm mb-8 leading-relaxed">Submit the daily registry data for legal state compliance.</p>
+            <button
+              onClick={handleGenerateCSV}
+              className="w-full bg-white text-slate-900 py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-colors uppercase tracking-wide text-xs flex items-center justify-center gap-2"
+            >
+              <Download size={16} /> Generate CSV Report
+            </button>
+          </div>
+
+          <Card className="p-6">
+            <h4 className="font-bold text-slate-800 mb-5 text-sm font-serif border-b border-slate-100 pb-2 text-left uppercase tracking-widest">Quick Actions</h4>
+            <div className="space-y-3">
+              <button
+                onClick={() => setActiveModal('donor')}
+                className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all"
+              >
+                <span className="group-hover:text-purple-800 transition-colors">Add New Donor</span>
+                <div className="bg-white p-1 rounded-md shadow-sm group-hover:bg-purple-100 transition-colors"><ChevronRight size={16} /></div>
+              </button>
+              <button
+                onClick={() => setActiveModal('pharmacy')}
+                className="w-full text-left px-4 py-4 rounded-xl bg-stone-50 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-sm font-bold text-slate-600 flex items-center justify-between group transition-all"
+              >
+                <span className="group-hover:text-purple-800 transition-colors">Pharmacy Requests</span>
+                <div className="bg-white p-1 rounded-md shadow-sm group-hover:bg-purple-100 transition-colors"><ChevronRight size={16} /></div>
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* --- Modals --- */}
+
+      {activeModal === 'details' && selectedAppointment && (
+        <Modal title="Appointment Details" onClose={() => setActiveModal(null)}>
+          <div className="space-y-6">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Patient</p>
+                <h4 className="text-xl font-bold text-slate-800">{selectedAppointment.patient}</h4>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Time</p>
+                <p className="text-xl font-bold text-purple-700">{selectedAppointment.time}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <p className="text-xs text-slate-500 font-bold mb-1">Procedure</p>
+                <p className="font-bold text-slate-800">{selectedAppointment.type}</p>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <p className="text-xs text-slate-500 font-bold mb-1">Location</p>
+                <p className="font-bold text-slate-800">{selectedAppointment.room}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notes</p>
+              <textarea className="w-full p-3 border border-slate-200 rounded-xl text-sm" rows="3" placeholder="Add clinical notes here..."></textarea>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setActiveModal(null)} className="flex-1 py-3 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50">Close</button>
+              <button onClick={() => { setActiveModal(null); showToast("Appointment Updated"); }} className="flex-1 py-3 bg-purple-700 text-white font-bold rounded-xl hover:bg-purple-800">Save Changes</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {activeModal === 'donor' && (
+        <Modal title="Donor Registration" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleSaveDonor} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">First Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Last Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
+            </div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Date of Birth</label><input type="date" className="w-full p-2 border rounded-lg" required /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Blood Group</label><select className="w-full p-2 border rounded-lg"><option>O+</option><option>A+</option><option>B+</option></select></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Donor Type</label><select className="w-full p-2 border rounded-lg"><option>Sperm</option><option>Egg</option></select></div>
+            </div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Register Donor</button>
+          </form>
+        </Modal>
+      )}
+
+      {activeModal === 'pharmacy' && (
+        <Modal title="Pharmacy Request" onClose={() => setActiveModal(null)}>
+          <form onSubmit={handleSavePharmacy} className="space-y-4">
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Patient ID</label><input type="text" placeholder="e.g. P001" className="w-full p-2 border rounded-lg" required /></div>
+            <div><label className="block text-xs font-bold text-slate-500 mb-1">Medication Name</label><input type="text" className="w-full p-2 border rounded-lg" required /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Quantity</label><input type="number" className="w-full p-2 border rounded-lg" required /></div>
+              <div><label className="block text-xs font-bold text-slate-500 mb-1">Priority</label><select className="w-full p-2 border rounded-lg"><option>Normal</option><option>Urgent</option></select></div>
+            </div>
+            <button type="submit" className="w-full bg-purple-700 text-white p-3 rounded-xl font-bold mt-2">Send Request</button>
+          </form>
+        </Modal>
+      )}
+
+    </div>
+  );
+};
+
+// --- Profile Page ---
+const ProfilePage = () => (
+  <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
+    <div className="relative mb-20">
+      <div className="h-48 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 w-full shadow-lg"></div>
+      <div className="absolute -bottom-16 left-12 flex items-end gap-6">
+        <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl bg-white overflow-hidden p-1">
+          <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center">
+            <User size={64} className="text-slate-300" />
+          </div>
+        </div>
+        <div className="mb-2">
+          <h2 className="text-3xl font-bold text-slate-900 font-serif">Dr. Anjali Kumar</h2>
+          <p className="text-slate-600 font-medium">Senior Reproductive Endocrinologist</p>
+        </div>
+      </div>
+    </div>
+    <div className="grid grid-cols-3 gap-8 pt-4">
+      <Card className="col-span-2 space-y-6 p-8">
+        <h3 className="font-bold text-lg border-b border-slate-100 pb-4">Personal Information</h3>
+        <div className="grid grid-cols-2 gap-6">
+          <div><label className="text-xs font-bold text-slate-400 uppercase">Email Address</label><p className="text-slate-700 font-medium">dr.anjali@project10.com</p></div>
+          <div><label className="text-xs font-bold text-slate-400 uppercase">Department</label><p className="text-slate-700 font-medium">Reproductive Medicine</p></div>
+          <div><label className="text-xs font-bold text-slate-400 uppercase">Employee ID</label><p className="text-slate-700 font-medium">EMP-2024-001</p></div>
+          <div><label className="text-xs font-bold text-slate-400 uppercase">Phone</label><p className="text-slate-700 font-medium">+91 98765 43210</p></div>
+        </div>
+      </Card>
+      <div className="space-y-6">
+        <Card className="p-6">
+          <h3 className="font-bold text-lg mb-4">Shift Schedule</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center text-sm"><span className="text-slate-500">Today</span><span className="font-bold text-purple-700">09:00 - 18:00</span></div>
+            <div className="flex justify-between items-center text-sm"><span className="text-slate-500">Tomorrow</span><span className="font-bold text-purple-700">09:00 - 14:00</span></div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+);
+
+// --- Main App Component ---
+export default function Project10HMIS() {
+  const [currentModule, setCurrentModule] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleLogout = () => {
+    // Since login is removed, this could redirect to a landing page or just reload
+    window.location.reload();
+  };
+
+  const renderContent = () => {
+    switch (currentModule) {
+      case 'consultation': return <ConsultationModule showToast={showToast} />;
+      case 'package': return <PackageModule showToast={showToast} />;
+      case 'iui': return <IUIProtocolModule showToast={showToast} />;
+      case 'ivf': return <IVFProcessSuite showToast={showToast} />;
+      case 'nicu': return <NICUModule showToast={showToast} />;
+      case 'art': return <ARTBankModule showToast={showToast} />;
+      case 'lifecycle': return <LifeCycleModule showToast={showToast} />;
+      case 'profile': return <ProfilePage />;
+      case 'schedule': return <ScheduleModule showToast={showToast} />;
+      default: return <DashboardModule onNavigate={setCurrentModule} showToast={showToast} />;
+    }
+  };
+
+  const NavItem = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => { setCurrentModule(id); setShowProfileMenu(false); }}
+      className={`w-full flex items-center gap-4 px-6 py-4 text-sm font-medium transition-all duration-300 border-r-[4px] group relative overflow-hidden
+        ${currentModule === id
+          ? 'bg-purple-50/80 text-purple-900 border-purple-600 font-bold'
+          : 'text-slate-500 hover:text-purple-800 hover:bg-purple-50 border-transparent'}`}
+    >
+      <Icon size={20} className={`relative z-10 transition-colors ${currentModule === id ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-500'}`} />
+      {sidebarOpen && <span className="relative z-10 tracking-wide">{label}</span>}
+      {currentModule === id && <div className="absolute inset-0 bg-gradient-to-r from-transparent to-purple-100/30"></div>}
+    </button>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#FDFCFB] flex font-sans text-slate-900 selection:bg-purple-100 selection:text-purple-900 overflow-hidden relative">
+
+      {/* Toast Notification */}
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+
+      {/* Light Premium Sidebar */}
+      <aside className={`bg-white text-slate-900 transition-all duration-300 flex flex-col shadow-xl z-20 border-r border-slate-100 h-screen ${sidebarOpen ? 'w-80' : 'w-24'}`}>
+        <div className="h-24 flex items-center justify-between px-8 border-b border-slate-50 shrink-0">
+          <Project10Logo collapsed={!sidebarOpen} />
+          {sidebarOpen && (
+            <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-purple-600 transition-colors p-1.5 rounded-lg hover:bg-slate-50">
+              <ChevronLeft size={20} />
+            </button>
+          )}
+        </div>
+
+        <nav className="flex-1 py-8 space-y-1 overflow-y-auto custom-scrollbar px-2">
+          <NavItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
+
+          <div className={`mt-10 mb-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ${!sidebarOpen && 'hidden'}`}>
+            Clinical Suite
+          </div>
+          <NavItem id="consultation" label="Consultation" icon={Users} />
+          <NavItem id="ivf" label="IVF Suite (10 Stages)" icon={FlaskConical} />
+          <NavItem id="iui" label="IUI Protocol" icon={TestTube} />
+          <NavItem id="nicu" label="NICU & Vitals" icon={Baby} />
+
+          <div className={`mt-10 mb-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ${!sidebarOpen && 'hidden'}`}>
+            Operations
+          </div>
+          <NavItem id="package" label="Package Mgmt" icon={CreditCard} />
+          <NavItem id="art" label="ART Registry" icon={Database} />
+          <NavItem id="lifecycle" label="Lifecycle Tracker" icon={Clock} />
+        </nav>
+
+        {!sidebarOpen && (
+          <div className="p-4 border-t border-slate-50 flex justify-center shrink-0">
+            <button onClick={() => setSidebarOpen(true)} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-slate-50 rounded-lg transition">
+              <ChevronRight size={24} />
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F8FAFC]">
+        <header className="h-24 bg-white/90 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-10 z-10 shrink-0">
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-slate-900 font-serif capitalize">
+              {currentModule === 'dashboard' ? 'Overview' :
+                currentModule === 'ivf' ? 'IVF Clinical Suite' :
+                  currentModule === 'iui' ? 'IUI Protocol' :
+                    currentModule.replace(/([A-Z])/g, ' $1')}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3 pr-8 border-r border-slate-100 relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-3 text-slate-400 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition relative group"
+              >
+                <Bell size={20} />
+                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-fuchsia-500 rounded-full border-2 border-white group-hover:animate-pulse"></span>
+              </button>
+
+              {showNotifications && (
+                <div className="absolute top-full right-4 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-fade-in">
+                  <div className="p-4 border-b border-slate-50 font-bold text-slate-800">Notifications</div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {NOTIFICATIONS.map((note) => (
+                      <div key={note.id} onClick={() => { setCurrentModule(note.link); setShowNotifications(false); }} className="p-4 hover:bg-slate-50 border-b last:border-0 flex gap-3 cursor-pointer transition-colors">
+                        <div className={`p-2 rounded-full h-fit bg-${note.color}-100 text-${note.color}-600`}><note.icon size={16} /></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-slate-800">{note.title}</p>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{note.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-4 pl-2 cursor-pointer group">
+                <div className="w-12 h-12 rounded-full bg-purple-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+                  <User size={22} className="text-purple-700 mt-2" />
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-bold text-slate-900 group-hover:text-purple-900">Dr. Anjali K.</p>
+                  <p className="text-xs text-slate-500 font-medium flex items-center gap-1"><Award size={10} className="text-fuchsia-500" /> Senior Specialist</p>
+                </div>
+                <ChevronRight size={16} className={`text-slate-300 transition-transform ${showProfileMenu ? 'rotate-90' : ''}`} />
+              </div>
+              {showProfileMenu && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-fade-in">
+                  <button onClick={() => { setCurrentModule('profile'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-purple-50 flex items-center gap-3 text-sm font-medium text-slate-700 transition"><User size={16} className="text-purple-600" /> My Profile</button>
+                  <div className="h-px bg-slate-100 my-1"></div>
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-3 hover:bg-rose-50 flex items-center gap-3 text-sm font-medium text-rose-600"><LogOut size={16} /> Sign Out</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative">
+          <div className="max-w-[1800px] mx-auto pb-10">
+            {renderContent()}
+          </div>
         </div>
       </main>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 4px; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+      `}</style>
     </div>
   );
 }
